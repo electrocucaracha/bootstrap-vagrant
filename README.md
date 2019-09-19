@@ -27,6 +27,16 @@ and providers.
 * vagrant-libvirt
 * vagrant-reload
 
+## How use this script?
+
+The [setup.sh](setup.sh) bash script has been designed be consumed
+remotely and executed multiple times.
+
+    curl -fsSL https://raw.githubusercontent.com/electrocucaracha/bootstrap-vagrant/master/setup.sh | PROVIDER=libvirt bash
+
+After the execution of the script, the *~/boostrap-vagrant.log* file is
+created to summarize the actions that were taken.
+
 ## License
 
 Apache-2.0

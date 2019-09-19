@@ -39,7 +39,7 @@ Vagrant.configure("2") do |config|
     sh.inline = <<-SHELL
       set -o xtrace
       cd /vagrant/
-      PROVIDER=#{provider} ./bootstrap-vagrant.sh
+      PROVIDER=#{provider} ./setup.sh
     SHELL
   end
   config.vm.provision :reload
