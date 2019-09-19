@@ -12,38 +12,12 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
-: "${PROVIDER:=libvirt}"
-
 msg="Summary \n"
-
-# shellcheck disable=SC1091
-source /etc/os-release || source /usr/lib/os-release
-case ${ID,,} in
-    *suse)
-    INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
-    sudo zypper -n ref
-    ;;
-
-    ubuntu|debian)
-    libvirt_group="libvirtd"
-    INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"
-    sudo apt-get update
-    ;;
-
-    rhel|centos|fedora)
-    PKG_MANAGER=$(command -v dnf || command -v yum)
-    INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install"
-    if ! sudo "$PKG_MANAGER" repolist | grep "epel/"; then
-        $INSTALLER_CMD epel-release
-    fi
-    sudo "$PKG_MANAGER" updateinfo
-
-    disable_ipv6
-    ;;
-esac
-
-if ! command -v wget; then
-    $INSTALLER_CMD wget
+vagrant_version=2.2.5
+virtualbox_version=6.0
+qemu_version=4.1.0
+if [ "${DEBUG:-false}" == "true" ]; then
+    set -o xtrace
 fi
 
 function _reload_grub {
@@ -60,12 +34,10 @@ function _reload_grub {
 }
 
 function enable_iommu {
-    iommu_support=$(sudo virt-host-validate | grep 'Checking for device assignment IOMMU support')
-    if [[ "$iommu_support" != *PASS* ]]; then
+    if ! iommu_support=$(sudo virt-host-validate qemu | grep 'Checking for device assignment IOMMU support'); then
         echo "- WARN - IOMMU support checker reported: $(awk -F':' '{print $3}' <<< "$iommu_support")"
     fi
-    iommu_validation=$(sudo virt-host-validate | grep 'Checking if IOMMU is enabled by kernel')
-    if [[ "$iommu_validation" == *PASS* ]]; then
+    if sudo virt-host-validate qemu | grep 'Checking if IOMMU is enabled by kernel'; then
         return
     fi
     if [ -f /etc/default/grub ]  && [[ "$(grep GRUB_CMDLINE_LINUX /etc/default/grub)" != *intel_iommu=on* ]]; then
@@ -109,6 +81,9 @@ function disable_ipv6 {
 }
 
 function create_sriov_vfs {
+    if ! command -v lshw; then
+        $INSTALLER_CMD lshw
+    fi
     for nic in $(sudo lshw -C network -short | grep Connection | awk '{ print $2 }'); do
         if [ -e "/sys/class/net/$nic/device/sriov_numvfs" ]  && grep -e up "/sys/class/net/$nic/operstate" > /dev/null ; then
             sriov_numvfs=$(cat "/sys/class/net/$nic/device/sriov_totalvfs")
@@ -158,19 +133,19 @@ function _vercmp {
 }
 
 function install_vagrant {
-    local vagrant_version=2.2.5
-
     if command -v vagrant; then
-        if _vercmp "$(vagrant version | awk 'NR==1{print $3}')" '>=' "vagrant_version"; then
+        if _vercmp "$(vagrant version | awk 'NR==1{print $3}')" '>=' "$vagrant_version"; then
             return
         fi
     fi
 
-    vagrant_pkg=""
+    pushd "$(mktemp -d)"
+    msg+="- INFO: Installing vagrant $vagrant_version\n"
+    vagrant_pkg="vagrant_${vagrant_version}_x86_64."
     case ${ID,,} in
-        *suse)
+        opensuse*)
             vagrant_pgp="pgp_keys.asc"
-            vagrant_pkg="vagrant_${vagrant_version}_x86_64.rpm"
+            vagrant_pkg+="rpm"
             wget -q "https://keybase.io/hashicorp/$vagrant_pgp"
             wget -q "https://releases.hashicorp.com/vagrant/$vagrant_version/$vagrant_pkg"
             gpg --quiet --with-fingerprint "$vagrant_pgp"
@@ -180,17 +155,18 @@ function install_vagrant {
             rm $vagrant_pgp
         ;;
         ubuntu|debian)
-            vagrant_pkg="vagrant_${vagrant_version}_x86_64.deb"
+            vagrant_pkg+="deb"
             wget -q "https://releases.hashicorp.com/vagrant/$vagrant_version/$vagrant_pkg"
             sudo dpkg -i "$vagrant_pkg"
         ;;
         rhel|centos|fedora)
-            vagrant_pkg="vagrant_${vagrant_version}_x86_64.rpm"
+            vagrant_pkg+="rpm"
             wget -q "https://releases.hashicorp.com/vagrant/$vagrant_version/$vagrant_pkg"
             $INSTALLER_CMD "$vagrant_pkg"
         ;;
     esac
-    rm "$vagrant_pkg"
+    rm $vagrant_pkg
+    popd
     if [[ ${HTTP_PROXY+x} = "x"  ]]; then
         vagrant plugin install vagrant-proxyconf
     fi
@@ -198,32 +174,35 @@ function install_vagrant {
 }
 
 function install_virtualbox {
-    local virtualbox_version="6.0"
-
     if command -v VBoxManage; then
         return
     fi
 
+    pushd "$(mktemp -d)"
+    msg+="- INFO: Installing VirtualBox $virtualbox_version\n"
+    wget -q https://www.virtualbox.org/download/oracle_vbox.asc
     case ${ID,,} in
-        *suse)
-            wget -q "http://download.virtualbox.org/virtualbox/rpm/opensuse/$VERSION/virtualbox.repo" -P /etc/zypp/repos.d/
-            wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | rpm --import -
+        opensuse*)
+            sudo wget -q "http://download.virtualbox.org/virtualbox/rpm/opensuse/virtualbox.repo" -P /etc/zypp/repos.d/
+            sudo rpm --import oracle_vbox.asc
         ;;
         ubuntu|debian)
-            echo "deb http://download.virtualbox.org/virtualbox/debian trusty contrib" | sudo tee --append /etc/apt/sources.list
+            echo "deb http://download.virtualbox.org/virtualbox/debian $UBUNTU_CODENAME contrib" | sudo tee /etc/apt/sources.list.d/virtualbox.list
             wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
-            wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add -
+            sudo apt-key add oracle_vbox.asc
+            sudo apt-get update
         ;;
         rhel|centos|fedora)
-            wget -q http://download.virtualbox.org/virtualbox/rpm/rhel/virtualbox.repo -P /etc/yum.repos.d
-            wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | rpm --import -
+            sudo wget -q https://download.virtualbox.org/virtualbox/rpm/el/virtualbox.repo -P /etc/yum.repos.d
+            sudo rpm --import oracle_vbox.asc
         ;;
     esac
-    $INSTALLER_CMD "VirtualBox-$virtualbox_version dkms"
+    rm oracle_vbox.asc
+    popd
+    $INSTALLER_CMD "VirtualBox-$virtualbox_version" dkms
 }
 
 function install_qemu {
-    local qemu_version=4.1.0
     local qemu_tarball="qemu-${qemu_version}.tar.xz"
 
     if command -v qemu-system-x86_64; then
@@ -241,19 +220,20 @@ function install_qemu {
             msg+=" version. This host server is using the\n"
             msg+=" ${qemu_version} version. For more information about"
             msg+=" QEMU in Linux go to QEMU official website (https://wiki.qemu.org/Hosts/Linux)\n"
-            msg+=" or use the bootstrap-qemu.sh script provided by this project"
         fi
         return
     fi
 
+    msg+="- INFO: Installing QEMU $qemu_version\n"
     case ${ID,,} in
         rhel|centos|fedora)
             $INSTALLER_CMD epel-release
-            $INSTALLER_CMD glib2-devel libfdt-devel pixman-devel zlib-devel wget python3 libpmem-devel numactl-devel
+            $INSTALLER_CMD glib2-devel libfdt-devel pixman-devel zlib-devel python3 libpmem-devel numactl-devel
             sudo -H -E "${PKG_MANAGER}" -q -y group install "Development Tools"
         ;;
     esac
 
+    pushd "$(mktemp -d)"
     wget -c "https://download.qemu.org/$qemu_tarball"
     tar xvf "$qemu_tarball"
     rm -rf "$qemu_tarball"
@@ -263,6 +243,7 @@ function install_qemu {
     sudo make install
     popd || exit
     rm -rf "qemu-${qemu_version}"
+    popd
 }
 
 function install_libvirt {
@@ -270,10 +251,11 @@ function install_libvirt {
         return
     fi
 
+    msg+="- INFO: Installing Libvirt\n"
     libvirt_group="libvirt"
     packages=(qemu )
     case ${ID,,} in
-    *suse)
+    opensuse*)
         # vagrant-libvirt dependencies
         packages+=(libvirt libvirt-devel ruby-devel gcc qemu-kvm zlib-devel libxml2-devel libxslt-devel make)
         # NFS
@@ -296,7 +278,6 @@ function install_libvirt {
     ${INSTALLER_CMD} "${packages[@]}"
     sudo usermod -a -G $libvirt_group "$USER" # This might require to reload user's group assigments
 
-
     # Start statd service to prevent NFS lock errors
     sudo systemctl enable rpc-statd
     sudo systemctl start rpc-statd
@@ -314,22 +295,54 @@ function install_libvirt {
         kvm-ok
         ;;
     esac
-    vagrant plugin install vagrant-libvirt
+    if command -v vagrant; then
+        vagrant plugin install vagrant-libvirt
+    fi
 }
 
-install_vagrant
-case $PROVIDER in
-    virtualbox|libvirt)
-        install_$PROVIDER
+# shellcheck disable=SC1091
+source /etc/os-release || source /usr/lib/os-release
+if [[ ${ID+x} = "x"  ]]; then
+    id_os="export $(grep "^ID=" /etc/os-release)"
+    eval "$id_os"
+fi
+case ${ID,,} in
+    opensuse*)
+    INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
+    sudo zypper -n ref
     ;;
-    * )
-        exit 1
+
+    ubuntu|debian)
+    libvirt_group="libvirtd"
+    INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"
+    sudo apt-get update
+    ;;
+
+    rhel|centos|fedora)
+    PKG_MANAGER=$(command -v dnf || command -v yum)
+    INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install"
+    if ! sudo "$PKG_MANAGER" repolist | grep "epel/"; then
+        $INSTALLER_CMD epel-release
+    fi
+    sudo "$PKG_MANAGER" updateinfo
+
+    disable_ipv6
     ;;
 esac
-export VAGRANT_DEFAULT_PROVIDER=${PROVIDER}
+
+if ! command -v wget; then
+    $INSTALLER_CMD wget
+fi
+
+install_vagrant
+case ${PROVIDER} in
+    libvirt|virtualbox)
+        "install_${PROVIDER}"
+    ;;
+esac
 
 enable_iommu
 enable_nested_virtualization
 create_sriov_vfs
 
-echo -e "$msg"
+echo -e "$msg" | tee ~/boostrap-vagrant.log
