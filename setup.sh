@@ -80,6 +80,7 @@ function disable_ipv6 {
     msg+="- WARN: IPv6 was disabled and requires to reboot the server to take effect\n"
 }
 
+# create_sriov_vfs() - Function that creates Virtual Functions for Single Root I/O Virtualization (SR-IOV)
 function create_sriov_vfs {
     if ! command -v lshw; then
         if [[ "${ID,,}" == *opensuse* ]]; then
@@ -95,6 +96,79 @@ function create_sriov_vfs {
             echo "$sriov_numvfs" | sudo tee "/sys/class/net/$nic/device/sriov_numvfs"
             msg+="- INFO: $sriov_numvfs SR-IOV Virtual Functions enabled on $nic"
         fi
+    done
+}
+
+function _install_qat_driver {
+    local qat_driver_version="1.7.l.4.6.0-00025" # Jul 23, 2019 https://01.org/intel-quick-assist-technology/downloads
+    local qat_driver_tarball="qat${qat_driver_version}.tar.gz"
+    if systemctl is-active --quiet qat_service; then
+        return
+    fi
+
+    if [ ! -d /tmp/qat ]; then
+        wget -O $qat_driver_tarball "https://01.org/sites/default/files/downloads/${qat_driver_tarball}"
+        sudo mkdir -p /tmp/qat
+        sudo tar -C /tmp/qat -xzf "$qat_driver_tarball"
+        rm "$qat_driver_tarball"
+    fi
+
+    case ${ID,,} in
+        opensuse*)
+            sudo -H -E zypper -q install -y -t pattern devel_C_C++
+            sudo -H -E zypper -q install -y --no-recommends pciutils libudev-devel openssl-devel gcc-c++ kernel-source kernel-syms
+            msg+="- WARN: The Intel QuickAssist Technology drivers don't have full support in {ID,,} yet."
+            return
+        ;;
+        ubuntu|debian)
+            sudo -H -E apt-get -y -q=3 install build-essential "linux-headers-$(uname -r)" pciutils libudev-dev
+        ;;
+        rhel|centos|fedora)
+            PKG_MANAGER=$(command -v dnf || command -v yum)
+            sudo "${PKG_MANAGER}" groups mark install "Development Tools"
+            sudo "${PKG_MANAGER}" groups install -y "Development Tools"
+            sudo -H -E "${PKG_MANAGER}" -q -y install "kernel-devel-$(uname -r)" pciutils libudev-devel gcc openssl-devel yum-plugin-fastestmirror
+        ;;
+    esac
+
+    for mod in $(lsmod | grep "^intel_qat" | awk '{print $4}'); do
+        sudo rmmod "$mod"
+    done
+    if lsmod | grep "^intel_qat"; then
+        sudo rmmod intel_qat
+    fi
+
+    pushd /tmp/qat
+    sudo ./configure --disable-qat-lkcf
+    for action in clean uninstall install; do
+        sudo make $action
+    done
+    popd
+
+    sudo systemctl start qat_service
+    sudo systemctl enable qat_service
+    msg+="- INFO: The Intel QuickAssist Technology drivers were installed using the $qat_driver_version version"
+}
+
+# create_qat_vfs() - Function that install Intel QuickAssist Technology drivers and enabled its Virtual Functions
+function create_qat_vfs {
+    _install_qat_driver
+
+    sudo modprobe vfio-pci
+    for qat_dev in $(for i in 0434 0435 37c8 6f54 19e2; do lspci -d 8086:$i -m; done|awk '{print $1}'); do
+        qat_numvfs=$(cat "/sys/bus/pci/devices/0000:$qat_dev/sriov_totalvfs")
+        echo 0 | sudo tee "/sys/bus/pci/devices/0000:$qat_dev/sriov_numvfs"
+        echo "$qat_numvfs" | sudo tee "/sys/bus/pci/devices/0000:$qat_dev/sriov_numvfs"
+        msg+="- INFO: $qat_numvfs SR-IOV Virtual Functions enabled on $nic"
+        #pci_id=$(sed -n '/^PCI_ID=/ {s///p;q;}' "/sys/bus/pci/devices/0000:${qat_dev}/virtfn0/uevent")
+        #if ! grep "${pci_id#*:}" /sys/bus/pci/drivers/vfio-pci/new_id; then
+        #    echo "${pci_id%:*} ${pci_id#*:}" | sudo tee --append /sys/bus/pci/drivers/vfio-pci/new_id
+        #fi
+        #for f in "/sys/bus/pci/devices/0000:${qat_dev}/virtfn*"; do
+        #    qat_pci_bus_vf=$(basename $(readlink $f))
+        #    echo $qat_pci_bus_vf | sudo tee --append /sys/bus/pci/drivers/c6xxvf/unbind
+        #    echo $qat_pci_bus_vf | sudo tee --append /sys/bus/pci/drivers/vfio-pci/bind
+        #done
     done
 }
 
@@ -348,5 +422,6 @@ esac
 enable_iommu
 enable_nested_virtualization
 create_sriov_vfs
+create_qat_vfs
 
 echo -e "$msg" | tee ~/boostrap-vagrant.log
