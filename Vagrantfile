@@ -32,6 +32,24 @@ Vagrant.configure("2") do |config|
     opensuse.vm.box = 'opensuse/openSUSE-Tumbleweed-Vagrant.x86_64'
     opensuse.vm.box_version = '1.0.20190918'
   end
+  # Upgrade Kernel version
+  config.vm.provision 'shell', privileged: false, inline: <<-SHELL
+    source /etc/os-release || source /usr/lib/os-release
+    case ${ID,,} in
+        rhel|centos|fedora)
+        PKG_MANAGER=$(command -v dnf || command -v yum)
+        INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install"
+        if ! sudo "$PKG_MANAGER" repolist | grep "epel/"; then
+            $INSTALLER_CMD epel-release
+        fi
+        sudo "$PKG_MANAGER" updateinfo
+        $INSTALLER_CMD kernel
+        sudo grub2-set-default 0
+        sudo grub2-mkconfig -o "$(sudo readlink -f /etc/grub2.cfg)"
+        ;;
+    esac
+  SHELL
+  config.vm.provision :reload
   config.vm.provision 'shell', privileged: false do |sh|
     sh.env = {
       'DEBUG': "true"

@@ -43,3 +43,11 @@ else
         echo "ERROR: Nested-Virtualization wasn't enabled for this processor"
     fi
 fi
+
+if ! sudo /etc/init.d/qat_service status | grep "There is .* QAT acceleration device(s) in the system:"; then
+    echo "ERROR: QAT drivers and/or service weren't installed properly"
+else
+    if [[ -z "$(for i in 0442 0443 37c9 19e3; do lspci -d 8086:$i; done)" ]]; then
+        echo "ERROR: There are no Virtual Functions enabled for any QAT device"
+    fi
+fi
