@@ -69,17 +69,6 @@ function enable_nested_virtualization {
     sudo modprobe vhost_net
 }
 
-function disable_ipv6 {
-    if [ ! -f /proc/net/if_inet6 ]; then
-        return
-    fi
-    if [ -f /etc/default/grub ]  && [[ "$(grep GRUB_CMDLINE_LINUX /etc/default/grub)" != *ipv6.disable=1* ]]; then
-        sudo sed -i "s|^GRUB_CMDLINE_LINUX\(.*\)\"|GRUB_CMDLINE_LINUX\1 ipv6.disable=1\"|g" /etc/default/grub
-    fi
-    _reload_grub
-    msg+="- WARN: IPv6 was disabled and requires to reboot the server to take effect\n"
-}
-
 function _install_sysfsutils {
     $INSTALLER_CMD sysfsutils
     if [ ! -f /etc/rc.d/rc.local ]; then
@@ -428,8 +417,6 @@ case ${ID,,} in
         $INSTALLER_CMD epel-release
     fi
     sudo "$PKG_MANAGER" updateinfo
-
-    disable_ipv6
     ;;
 esac
 
