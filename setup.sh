@@ -80,6 +80,15 @@ function disable_ipv6 {
     msg+="- WARN: IPv6 was disabled and requires to reboot the server to take effect\n"
 }
 
+function _install_sysfsutils {
+    $INSTALLER_CMD sysfsutils
+    if [ ! -f /etc/rc.d/rc.local ]; then
+        sudo mkdir -p /etc/rc.d/
+        sudo touch /etc/rc.d/rc.local
+    fi
+    sudo chmod +x /etc/rc.d/rc.local
+}
+
 # create_sriov_vfs() - Function that creates Virtual Functions for Single Root I/O Virtualization (SR-IOV)
 function create_sriov_vfs {
     if ! command -v lshw; then
@@ -89,12 +98,16 @@ function create_sriov_vfs {
             $INSTALLER_CMD hwloc
         fi
     fi
+    _install_sysfsutils
     for nic in $(sudo lshw -C network -short | grep Connection | awk '{ print $2 }'); do
         if [ -e "/sys/class/net/$nic/device/sriov_numvfs" ]  && grep -e up "/sys/class/net/$nic/operstate" > /dev/null ; then
             sriov_numvfs=$(cat "/sys/class/net/$nic/device/sriov_totalvfs")
             echo 0 | sudo tee "/sys/class/net/$nic/device/sriov_numvfs"
             echo "$sriov_numvfs" | sudo tee "/sys/class/net/$nic/device/sriov_numvfs"
-            msg+="- INFO: $sriov_numvfs SR-IOV Virtual Functions enabled on $nic"
+            if ! grep "$nic/device/sriov_numvf" /etc/rc.d/rc.local; then
+                echo "echo '$sriov_numvfs' > /sys/class/net/$nic/device/sriov_numvfs" | sudo tee --append /etc/rc.d/rc.local
+            fi
+            msg+="- INFO: $sriov_numvfs SR-IOV Virtual Functions enabled on $nic\n"
         fi
     done
 }
@@ -117,7 +130,7 @@ function _install_qat_driver {
         opensuse*)
             sudo -H -E zypper -q install -y -t pattern devel_C_C++
             sudo -H -E zypper -q install -y --no-recommends pciutils libudev-devel openssl-devel gcc-c++ kernel-source kernel-syms
-            msg+="- WARN: The Intel QuickAssist Technology drivers don't have full support in {ID,,} yet."
+            msg+="- WARN: The Intel QuickAssist Technology drivers don't have full support in {ID,,} yet.\n"
             return
         ;;
         ubuntu|debian)
@@ -147,28 +160,23 @@ function _install_qat_driver {
 
     sudo systemctl start qat_service
     sudo systemctl enable qat_service
-    msg+="- INFO: The Intel QuickAssist Technology drivers were installed using the $qat_driver_version version"
+    msg+="- INFO: The Intel QuickAssist Technology drivers were installed using the $qat_driver_version version\n"
 }
 
 # create_qat_vfs() - Function that install Intel QuickAssist Technology drivers and enabled its Virtual Functions
 function create_qat_vfs {
     _install_qat_driver
+    _install_sysfsutils
 
     sudo modprobe vfio-pci
     for qat_dev in $(for i in 0434 0435 37c8 6f54 19e2; do lspci -d 8086:$i -m; done|awk '{print $1}'); do
         qat_numvfs=$(cat "/sys/bus/pci/devices/0000:$qat_dev/sriov_totalvfs")
         echo 0 | sudo tee "/sys/bus/pci/devices/0000:$qat_dev/sriov_numvfs"
         echo "$qat_numvfs" | sudo tee "/sys/bus/pci/devices/0000:$qat_dev/sriov_numvfs"
-        msg+="- INFO: $qat_numvfs SR-IOV Virtual Functions enabled on $nic"
-        #pci_id=$(sed -n '/^PCI_ID=/ {s///p;q;}' "/sys/bus/pci/devices/0000:${qat_dev}/virtfn0/uevent")
-        #if ! grep "${pci_id#*:}" /sys/bus/pci/drivers/vfio-pci/new_id; then
-        #    echo "${pci_id%:*} ${pci_id#*:}" | sudo tee --append /sys/bus/pci/drivers/vfio-pci/new_id
-        #fi
-        #for f in "/sys/bus/pci/devices/0000:${qat_dev}/virtfn*"; do
-        #    qat_pci_bus_vf=$(basename $(readlink $f))
-        #    echo $qat_pci_bus_vf | sudo tee --append /sys/bus/pci/drivers/c6xxvf/unbind
-        #    echo $qat_pci_bus_vf | sudo tee --append /sys/bus/pci/drivers/vfio-pci/bind
-        #done
+        if ! grep "/0000:$qat_dev/sriov_numvfs" /etc/rc.d/rc.local; then
+            echo "echo '$qat_numvfs' > /sys/bus/pci/devices/0000:$qat_dev/sriov_numvfs" | sudo tee --append /etc/rc.d/rc.local
+        fi
+        msg+="- INFO: $qat_numvfs SR-IOV Virtual Functions enabled on $nic\n"
     done
 }
 
