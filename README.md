@@ -1,7 +1,7 @@
 # Bootstrap Vagrant
 [![Build Status](https://travis-ci.org/electrocucaracha/bootstrap-vagrant.png)](https://travis-ci.org/electrocucaracha/bootstrap-vagrant)
 
-This project was created to ensure that [bootstrap-vagrant.sh](bootstrap-vagrant.sh)
+This project was created to ensure that [setup.sh](setup.sh)
 bash script is able to install [Vagrant tool][1] in different Linux
 Distributions. It covers the installation of its dependencies, plugins
 and providers.
