@@ -15,11 +15,17 @@ $no_proxy = ENV['NO_PROXY'] || ENV['no_proxy'] || "127.0.0.1,localhost"
 end
 $no_proxy += ",10.0.2.15"
 
+File.exists?("/usr/share/qemu/OVMF.fd") ? loader = "/usr/share/qemu/OVMF.fd" : loader = File.join(File.dirname(__FILE__), "OVMF.fd")
+if not File.exists?(loader)
+  system('curl -O https://download.clearlinux.org/image/OVMF.fd')
+end
+
 Vagrant.configure("2") do |config|
   config.vm.provider :libvirt
   config.vm.provider :virtualbox
 
-  provider = (ENV['PROVIDER'] || :virtualbox).to_sym
+  config.vm.synced_folder './', '/vagrant'
+  provider = (ENV['PROVIDER'] || :libvirt).to_sym
   config.vm.define "ubuntu_#{provider}" do |ubuntu|
     ubuntu.vm.box = 'elastic/ubuntu-16.04-x86_64'
     ubuntu.vm.box_version = '20180210.0.0'
@@ -31,6 +37,13 @@ Vagrant.configure("2") do |config|
   config.vm.define "opensuse_#{provider}" do |opensuse|
     opensuse.vm.box = 'opensuse/openSUSE-Tumbleweed-Vagrant.x86_64'
     opensuse.vm.box_version = '1.0.20190918'
+  end
+  config.vm.define "clearlinux_#{provider}" do |clearlinux|
+    clearlinux.vm.box = 'AntonioMeireles/ClearLinux'
+    clearlinux.vm.box_version = '31130'
+    clearlinux.vm.provider 'libvirt' do |v|
+      v.loader = loader
+    end
   end
   # Upgrade Kernel version
   config.vm.provision 'shell', privileged: false, inline: <<-SHELL
@@ -46,6 +59,11 @@ Vagrant.configure("2") do |config|
         $INSTALLER_CMD kernel
         sudo grub2-set-default 0
         sudo grub2-mkconfig -o "$(sudo readlink -f /etc/grub2.cfg)"
+        ;;
+        clear-linux-os)
+        sudo mkdir -p /etc/kernel/cmdline.d
+        echo "module.sig_unenforce" | sudo tee /etc/kernel/cmdline.d/allow-unsigned-modules.conf
+        sudo clr-boot-manager update
         ;;
     esac
   SHELL
@@ -70,13 +88,13 @@ Vagrant.configure("2") do |config|
   end
 
   [:virtualbox, :libvirt].each do |provider|
-  config.vm.provider provider do |p, override|
+  config.vm.provider provider do |p|
       p.cpus = 4
       p.memory = 8192
     end
   end
 
-  config.vm.provider :libvirt do |v, override|
+  config.vm.provider :libvirt do |v|
     v.cpu_mode = 'host-passthrough'
     v.nested = true
     v.random_hostname = true

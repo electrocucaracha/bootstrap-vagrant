@@ -21,7 +21,9 @@ if [ "${DEBUG:-false}" == "true" ]; then
 fi
 
 function _reload_grub {
-    if command -v grub-mkconfig; then
+    if command -v clr-boot-manager; then
+        sudo clr-boot-manager update
+    elif command -v grub-mkconfig; then
         sudo grub-mkconfig -o /boot/grub/grub.cfg
         sudo update-grub
     elif command -v grub2-mkconfig; then
@@ -40,8 +42,13 @@ function enable_iommu {
     if sudo virt-host-validate qemu | grep 'Checking if IOMMU is enabled by kernel'; then
         return
     fi
-    if [ -f /etc/default/grub ]  && [[ "$(grep GRUB_CMDLINE_LINUX /etc/default/grub)" != *intel_iommu=on* ]]; then
-        sudo sed -i "s|^GRUB_CMDLINE_LINUX\(.*\)\"|GRUB_CMDLINE_LINUX\1 intel_iommu=on\"|g" /etc/default/grub
+    if [[ "${ID,,}" == *clear-linux-os* ]]; then
+        mkdir -p /etc/kernel/cmdline.d
+        echo "intel_iommu=on" | sudo tee /etc/kernel/cmdline.d/enable-iommu.conf
+    else
+        if [ -f /etc/default/grub ]  && [[ "$(grep GRUB_CMDLINE_LINUX /etc/default/grub)" != *intel_iommu=on* ]]; then
+            sudo sed -i "s|^GRUB_CMDLINE_LINUX\(.*\)\"|GRUB_CMDLINE_LINUX\1 intel_iommu=on\"|g" /etc/default/grub
+        fi
     fi
     _reload_grub
     msg+="- WARN: IOMMU was enabled and requires to reboot the server to take effect\n"
@@ -70,7 +77,12 @@ function enable_nested_virtualization {
 }
 
 function _install_sysfsutils {
-    $INSTALLER_CMD sysfsutils
+    local sysfsutil_pkg="sysfsutils"
+
+    if [[ "${ID,,}" == *clear-linux-os* ]]; then
+        sysfsutil_pkg="openstack-common"
+    fi
+    $INSTALLER_CMD $sysfsutil_pkg
     if [ ! -f /etc/rc.d/rc.local ]; then
         sudo mkdir -p /etc/rc.d/
         echo '#!/bin/bash' | sudo tee /etc/rc.d/rc.local
@@ -148,6 +160,9 @@ function _install_qat_driver {
             sudo "${PKG_MANAGER}" groups install -y "Development Tools"
             sudo -H -E "${PKG_MANAGER}" -q -y install "kernel-devel-$(uname -r)" pciutils libudev-devel gcc openssl-devel yum-plugin-fastestmirror
         ;;
+        clear-linux-os)
+            sudo -H -E swupd bundle-add --quiet linux-lts2018-dev make c-basic dev-utils devpkg-systemd
+        ;;
     esac
 
     for mod in $(lsmod | grep "^intel_qat" | awk '{print $4}'); do
@@ -163,6 +178,25 @@ function _install_qat_driver {
         sudo make $action
     done
     popd
+
+    sudo bash -c 'cat << NET > /etc/systemd/system/qat_service.service
+[Unit]
+Description=Intel QuickAssist Technology service
+
+[Service]
+Type=forking
+Restart=no
+TimeoutSec=5min
+IgnoreSIGPIPE=no
+KillMode=process
+GuessMainPID=no
+RemainAfterExit=yes
+ExecStart=/etc/init.d/qat_service start
+ExecStop=/etc/init.d/qat_service stop
+
+[Install]
+WantedBy=multi-user.target
+NET'
 
     sudo systemctl start qat_service
     sudo systemctl enable qat_service
@@ -256,6 +290,14 @@ function install_vagrant {
             wget -q "https://releases.hashicorp.com/vagrant/$vagrant_version/$vagrant_pkg"
             $INSTALLER_CMD "$vagrant_pkg"
         ;;
+        clear-linux-os)
+            vagrant_pkg="vagrant_${vagrant_version}_linux_amd64.zip"
+            wget -q "https://releases.hashicorp.com/vagrant/$vagrant_version/$vagrant_pkg"
+            unzip "$vagrant_pkg"
+            $INSTALLER_CMD devpkg-compat-fuse-soname2 fuse
+            sudo mkdir -p /usr/local/bin
+            sudo mv vagrant /usr/local/bin/
+        ;;
     esac
     rm $vagrant_pkg
     popd
@@ -287,6 +329,10 @@ function install_virtualbox {
         rhel|centos|fedora)
             sudo wget -q https://download.virtualbox.org/virtualbox/rpm/el/virtualbox.repo -P /etc/yum.repos.d
             sudo rpm --import oracle_vbox.asc
+        ;;
+        clear-linux-os)
+            msg+="- WARN: The VirtualBox provider isn't supported by ${ID,,} yet.\n"
+            return
         ;;
     esac
     rm oracle_vbox.asc
@@ -347,31 +393,57 @@ function install_libvirt {
     libvirt_group="libvirt"
     packages=(qemu )
     case ${ID,,} in
-    opensuse*)
+        opensuse*)
         # vagrant-libvirt dependencies
         packages+=(libvirt libvirt-devel ruby-devel gcc qemu-kvm zlib-devel libxml2-devel libxslt-devel make)
         # NFS
         packages+=(nfs-kernel-server)
-    ;;
-    ubuntu|debian)
+        ;;
+        ubuntu|debian)
         libvirt_group="libvirtd"
         # vagrant-libvirt dependencies
         packages+=(libvirt-bin ebtables dnsmasq libxslt-dev libxml2-dev libvirt-dev zlib1g-dev ruby-dev cpu-checker)
         # NFS
         packages+=(nfs-kernel-server)
-    ;;
-    rhel|centos|fedora)
+        ;;
+        rhel|centos|fedora)
         # vagrant-libvirt dependencies
         packages+=(libvirt libvirt-devel ruby-devel gcc qemu-kvm)
         # NFS
         packages+=(nfs-utils nfs-utils-lib)
         ;;
+        clear-linux-os)
+        # vagrant-libvirt dependencies
+        packages=(kvm-host devpkg-libvirt)
+        # NFS
+        packages+=(nfs-utils)
+	sudo bash -c 'cat << NET > /etc/systemd/system/rpc-statd.service
+[Unit]
+Description=NFS status monitor for NFSv2/3 locking.
+
+[Service]
+Type=forking
+PIDFile=/var/run/rpc.statd.pid
+ExecStart=/usr/bin/rpc.statd --no-notify
+
+[Install]
+WantedBy=nfs-server.service
+NET'
+        ;;
     esac
     ${INSTALLER_CMD} "${packages[@]}"
     sudo usermod -a -G $libvirt_group "$USER" # This might require to reload user's group assigments
 
+    # Start libvirt service
+    if ! systemctl is-enabled --quiet libvirtd; then
+        sudo systemctl enable libvirtd
+    fi
+    sudo systemctl start libvirtd
+
     # Start statd service to prevent NFS lock errors
-    sudo systemctl enable rpc-statd
+    if ! systemctl is-enabled --quiet rpc-statd; then
+        sudo systemctl enable rpc-statd
+    fi
     sudo systemctl start rpc-statd
 
     if command -v firewall-cmd && systemctl is-active --quiet firewalld; then
@@ -388,7 +460,12 @@ function install_libvirt {
         ;;
     esac
     if command -v vagrant; then
-        vagrant plugin install vagrant-libvirt
+        if [[ "${ID,,}" == *clear-linux-os* ]]; then
+            sudo ln -s /usr/lib64/libvirt /usr/lib/libvirt
+            msg+="- WARN: The libvirt vagrant plugin isn't supported by ${ID,,} yet.\n"
+        else
+            vagrant plugin install vagrant-libvirt
+        fi
     fi
 }
 
@@ -417,6 +494,10 @@ case ${ID,,} in
         $INSTALLER_CMD epel-release
     fi
     sudo "$PKG_MANAGER" updateinfo
+    ;;
+    clear-linux-os)
+    INSTALLER_CMD="sudo -H -E swupd bundle-add --quiet"
+    sudo swupd update --download
     ;;
 esac
 
