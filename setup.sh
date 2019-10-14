@@ -13,7 +13,7 @@ set -o errexit
 set -o pipefail
 
 msg="Summary \n"
-vagrant_version=2.2.5
+vagrant_version=2.2.6
 virtualbox_version=6.0
 qemu_version=4.1.0
 if [ "${DEBUG:-false}" == "true" ]; then
