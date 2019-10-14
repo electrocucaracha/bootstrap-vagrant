@@ -152,7 +152,7 @@ function _install_qat_driver {
             return
         ;;
         ubuntu|debian)
-            sudo -H -E apt-get -y -q=3 install build-essential "linux-headers-$(uname -r)" pciutils libudev-dev
+            sudo -H -E apt-get -y -q=3 install build-essential "linux-headers-$(uname -r)" pciutils libudev-dev pkg-config
         ;;
         rhel|centos|fedora)
             PKG_MANAGER=$(command -v dnf || command -v yum)
@@ -321,9 +321,9 @@ function install_virtualbox {
             sudo rpm --import oracle_vbox.asc
         ;;
         ubuntu|debian)
+            $INSTALLER_CMD gnupg
             echo "deb http://download.virtualbox.org/virtualbox/debian $UBUNTU_CODENAME contrib" | sudo tee /etc/apt/sources.list.d/virtualbox.list
             wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
-            sudo apt-key add oracle_vbox.asc
             sudo apt-get update
         ;;
         rhel|centos|fedora)
@@ -400,7 +400,9 @@ function install_libvirt {
         packages+=(nfs-kernel-server)
         ;;
         ubuntu|debian)
-        libvirt_group="libvirtd"
+        if [[ "${VERSION_ID}" == *16.04* ]]; then
+            libvirt_group+="d"
+        fi
         # vagrant-libvirt dependencies
         packages+=(libvirt-bin ebtables dnsmasq libxslt-dev libxml2-dev libvirt-dev zlib1g-dev ruby-dev cpu-checker)
         # NFS
@@ -468,6 +470,11 @@ NET'
         fi
     fi
 }
+
+if command -v wget; then
+    echo "Sync server's clock"
+    sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
+fi
 
 # shellcheck disable=SC1091
 source /etc/os-release || source /usr/lib/os-release

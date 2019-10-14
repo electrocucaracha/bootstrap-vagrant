@@ -26,9 +26,13 @@ Vagrant.configure("2") do |config|
 
   config.vm.synced_folder './', '/vagrant'
   provider = (ENV['PROVIDER'] || :libvirt).to_sym
-  config.vm.define "ubuntu_#{provider}" do |ubuntu|
+  config.vm.define "ubuntu_xenial_#{provider}" do |ubuntu|
     ubuntu.vm.box = 'elastic/ubuntu-16.04-x86_64'
     ubuntu.vm.box_version = '20180210.0.0'
+  end
+  config.vm.define "ubuntu_bionic_#{provider}" do |ubuntu|
+    ubuntu.vm.box = 'peru/ubuntu-18.04-server-amd64'
+    ubuntu.vm.box_version = '20190905.01'
   end
   config.vm.define "centos_#{provider}" do |centos|
     centos.vm.box = 'centos/7'
@@ -36,7 +40,7 @@ Vagrant.configure("2") do |config|
   end
   config.vm.define "opensuse_#{provider}" do |opensuse|
     opensuse.vm.box = 'opensuse/openSUSE-Tumbleweed-Vagrant.x86_64'
-    opensuse.vm.box_version = '1.0.20190918'
+    opensuse.vm.box_version = '1.0.20191005'
   end
   config.vm.define "clearlinux_#{provider}" do |clearlinux|
     clearlinux.vm.box = 'AntonioMeireles/ClearLinux'

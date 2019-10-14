@@ -8,12 +8,12 @@ and providers.
 
 ## Linux Distros
 
-| Name       | Version    |
-|:-----------|:----------:|
-| Ubuntu     | 16.04      |
-| CentOS     | 7          |
-| OpenSUSE   | Tumbleweed |
-| ClearLinux | 31130      |
+| Name       | Version     |
+|:-----------|:-----------:|
+| Ubuntu     | 16.04/18.04 |
+| CentOS     | 7           |
+| OpenSUSE   | Tumbleweed  |
+| ClearLinux | 31130       |
 
 ## Vagrant Providers
 
