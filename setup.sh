@@ -471,6 +471,16 @@ NET'
     fi
 }
 
+if ! sudo -n "true"; then
+    echo ""
+    echo "passwordless sudo is needed for '$(id -nu)' user."
+    echo "Please fix your /etc/sudoers file. You likely want an"
+    echo "entry like the following one..."
+    echo ""
+    echo "$(id -nu) ALL=(ALL) NOPASSWD: ALL"
+    exit 1
+fi
+
 if command -v wget; then
     echo "Sync server's clock"
     sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
