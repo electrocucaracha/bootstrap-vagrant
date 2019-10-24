@@ -107,8 +107,7 @@ EOL'
     fi
 
     sudo chmod +x /etc/rc.d/rc.local
-    sudo systemctl start rc-local
-    sudo systemctl enable rc-local
+    sudo systemctl --now enable rc-local
 }
 
 # create_sriov_vfs() - Function that creates Virtual Functions for Single Root I/O Virtualization (SR-IOV)
@@ -172,6 +171,15 @@ function _install_qat_driver {
         sudo rmmod intel_qat
     fi
 
+    sudo tee /lib/modprobe.d/quickassist-blacklist.conf  << EOF
+### Blacklist in-kernel QAT drivers to avoid kernel boot problems.
+# Lewisburg QAT PF
+blacklist qat_c62x
+
+# Common QAT driver
+blacklist intel_qat
+EOF
+
     pushd /tmp/qat
     sudo ./configure --enable-icp-sriov=host
     for action in clean uninstall install; do
@@ -179,7 +187,8 @@ function _install_qat_driver {
     done
     popd
 
-    sudo bash -c 'cat << NET > /etc/systemd/system/qat_service.service
+    if [[ "${ID,,}" == *clear-linux-os* ]]; then
+        sudo tee /etc/systemd/system/qat_service.service << EOF
 [Unit]
 Description=Intel QuickAssist Technology service
 
@@ -196,10 +205,10 @@ ExecStop=/etc/init.d/qat_service stop
 
 [Install]
 WantedBy=multi-user.target
-NET'
+EOF
+    fi
 
-    sudo systemctl start qat_service
-    sudo systemctl enable qat_service
+    sudo systemctl --now enable qat_service
     msg+="- INFO: The Intel QuickAssist Technology drivers were installed using the $qat_driver_version version\n"
 }
 
@@ -208,7 +217,6 @@ function create_qat_vfs {
     _install_qat_driver
     _install_sysfsutils
 
-    sudo modprobe vfio-pci
     for qat_dev in $(for i in 0434 0435 37c8 6f54 19e2; do lspci -d 8086:$i -m; done|awk '{print $1}'); do
         qat_numvfs=$(cat "/sys/bus/pci/devices/0000:$qat_dev/sriov_totalvfs")
         echo 0 | sudo tee "/sys/bus/pci/devices/0000:$qat_dev/sriov_numvfs"
