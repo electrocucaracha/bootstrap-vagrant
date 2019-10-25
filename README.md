@@ -38,6 +38,13 @@ remotely and executed multiple times.
 After the execution of the script, the *~/boostrap-vagrant.log* file is
 created to summarize the actions that were taken.
 
+### Environment variables
+
+| Name                   | Default | Description                                         |
+|:-----------------------|:-------:|:----------------------------------------------------|
+| PROVIDER               |         | Specifies the Vagrant Provider to be installed      |
+| ENABLE_VAGRANT_INSTALL | true    | Enable or disable the installation of Vagrant tools |
+
 ## License
 
 Apache-2.0

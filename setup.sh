@@ -530,7 +530,9 @@ if ! command -v wget; then
     $INSTALLER_CMD wget
 fi
 
-install_vagrant
+if [[ "${ENABLE_VAGRANT_INSTALL:-true}" == "true" ]]; then
+    install_vagrant
+fi
 case ${PROVIDER} in
     libvirt|virtualbox)
         "install_${PROVIDER}"
