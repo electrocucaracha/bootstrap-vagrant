@@ -348,30 +348,41 @@ function install_virtualbox {
     $INSTALLER_CMD "VirtualBox-$virtualbox_version" dkms
 }
 
-function install_qemu {
+function check_qemu {
     local qemu_tarball="qemu-${qemu_version}.tar.xz"
+    local pmdk_version="1.4"
 
     if command -v qemu-system-x86_64; then
-        qemu_version=$(qemu-system-x86_64 --version | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')
-        if _vercmp "${qemu_version}" '>' "2.6.0"; then
-            # Permissions required to enable Pmem in QEMU
-            sudo sed -i "s/#security_driver .*/security_driver = \"none\"/" /etc/libvirt/qemu.conf
+        qemu_version_installed=$(qemu-system-x86_64 --version | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')
+        if _vercmp "${qemu_version_installed}" '>' "2.6.0"; then
+            if [ -f /etc/libvirt/qemu.conf ]; then
+                # Permissions required to enable Pmem in QEMU
+                sudo sed -i "s/#security_driver .*/security_driver = \"none\"/" /etc/libvirt/qemu.conf
+            fi
             if [ -f /etc/apparmor.d/abstractions/libvirt-qemu ]; then
                 sudo sed -i "s|  /{dev,run}/shm .*|  /{dev,run}/shm rw,|"  /etc/apparmor.d/abstractions/libvirt-qemu
             fi
             sudo systemctl restart libvirtd
+            return
         else
             # NOTE: PMEM in QEMU (https://nvdimm.wiki.kernel.org/pmem_in_qemu)
             msg+="- WARN: PMEM support in QEMU is available since 2.6.0"
-            msg+=" version. This host server is using the\n"
-            msg+=" ${qemu_version} version. For more information about"
-            msg+=" QEMU in Linux go to QEMU official website (https://wiki.qemu.org/Hosts/Linux)\n"
+            msg+=" version. This host server is using the ${qemu_version_installed} version.\n"
         fi
-        return
     fi
 
     msg+="- INFO: Installing QEMU $qemu_version\n"
     case ${ID,,} in
+        ubuntu|debian)
+            $INSTALLER_CMD libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev libnuma-dev
+            pushd "$(mktemp -d)"
+            wget -c "https://github.com/pmem/pmdk/releases/download/${pmdk_version}/pmdk-${pmdk_version}-dpkgs.tar.gz"
+            tar xvf "pmdk-${pmdk_version}-dpkgs.tar.gz"
+            for pkg in libpmem libpmem-dev; do
+                sudo dpkg -i "${pkg}_${pmdk_version}-1_amd64.deb"
+            done
+            popd
+        ;;
         rhel|centos|fedora)
             $INSTALLER_CMD epel-release
             $INSTALLER_CMD glib2-devel libfdt-devel pixman-devel zlib-devel python3 libpmem-devel numactl-devel
@@ -382,13 +393,11 @@ function install_qemu {
     pushd "$(mktemp -d)"
     wget -c "https://download.qemu.org/$qemu_tarball"
     tar xvf "$qemu_tarball"
-    rm -rf "$qemu_tarball"
     pushd "qemu-${qemu_version}" || exit
     ./configure --target-list=x86_64-softmmu --enable-libpmem --enable-numa --enable-kvm
     make
     sudo make install
-    popd || exit
-    rm -rf "qemu-${qemu_version}"
+    popd
     popd
 }
 
@@ -427,7 +436,8 @@ function install_libvirt {
         packages=(kvm-host devpkg-libvirt)
         # NFS
         packages+=(nfs-utils)
-	sudo bash -c 'cat << NET > /etc/systemd/system/rpc-statd.service
+        sudo touch /etc/exports
+	sudo tee /etc/systemd/system/rpc-statd.service << EOL
 [Unit]
 Description=NFS status monitor for NFSv2/3 locking.
 
@@ -438,7 +448,7 @@ ExecStart=/usr/bin/rpc.statd --no-notify
 
 [Install]
 WantedBy=nfs-server.service
-NET'
+EOL
         ;;
     esac
     ${INSTALLER_CMD} "${packages[@]}"
@@ -463,7 +473,9 @@ NET'
         sudo firewall-cmd --set-default-zone=trusted
         sudo firewall-cmd --reload
     fi
+    sudo systemctl --now enable rpcbind nfs-server
 
+    check_qemu
     case ${ID,,} in
         ubuntu|debian)
         kvm-ok
