@@ -30,13 +30,13 @@ and providers.
 
 ## How use this script?
 
-The [setup.sh](setup.sh) bash script has been designed be consumed
+The [setup.sh](setup.sh) bash script has been designed to be consumed
 remotely and executed multiple times.
 
-    curl -fsSL https://raw.githubusercontent.com/electrocucaracha/bootstrap-vagrant/master/setup.sh | PROVIDER=libvirt bash
+    curl -fsSL http://bit.ly/initVagrant | PROVIDER=libvirt bash
 
-After the execution of the script, the *~/boostrap-vagrant.log* file is
-created to summarize the actions that were taken.
+After the execution of the script, the *~/boostrap-vagrant.log* file
+is created to summarize the actions that were taken.
 
 ### Environment variables
 
