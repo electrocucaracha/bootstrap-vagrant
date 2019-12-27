@@ -11,9 +11,9 @@ and providers.
 | Name       | Version     |
 |:-----------|:-----------:|
 | Ubuntu     | 16.04/18.04 |
-| CentOS     | 7           |
+| CentOS     | 7/8         |
 | OpenSUSE   | Tumbleweed  |
-| ClearLinux | 31130       |
+| ClearLinux | 31830       |
 
 ## Vagrant Providers
 
