@@ -13,8 +13,8 @@ set -o errexit
 set -o pipefail
 
 msg="Summary \n"
-vagrant_version=2.2.6
-virtualbox_version=6.0
+export PKG_VAGRANT_VERSION=2.2.6
+export PKG_VIRTUALBOX_VERSION=6.0
 qemu_version=4.1.0
 if [ "${DEBUG:-false}" == "true" ]; then
     set -o xtrace
@@ -137,7 +137,7 @@ function _install_qat_driver {
     fi
 
     if [ ! -d /tmp/qat ]; then
-        wget -O $qat_driver_tarball "https://01.org/sites/default/files/downloads/${qat_driver_tarball}"
+        curl -o $qat_driver_tarball "https://01.org/sites/default/files/downloads/${qat_driver_tarball}"
         sudo mkdir -p /tmp/qat
         sudo tar -C /tmp/qat -xzf "$qat_driver_tarball"
         rm "$qat_driver_tarball"
@@ -155,9 +155,13 @@ function _install_qat_driver {
         ;;
         rhel|centos|fedora)
             PKG_MANAGER=$(command -v dnf || command -v yum)
-            sudo "${PKG_MANAGER}" groups mark install "Development Tools"
+            sudo "${PKG_MANAGER}" groups mark install -y "Development Tools"
             sudo "${PKG_MANAGER}" groups install -y "Development Tools"
-            sudo -H -E "${PKG_MANAGER}" -q -y install "kernel-devel-$(uname -r)" pciutils libudev-devel gcc openssl-devel yum-plugin-fastestmirror
+            INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install kernel-devel-$(uname -r) pciutils libudev-devel gcc openssl-devel"
+            if [[ "${VERSION_ID}" == *7* ]]; then
+                INSTALLER_CMD+=" yum-plugin-fastestmirror"
+            fi
+            $INSTALLER_CMD
         ;;
         clear-linux-os)
             sudo -H -E swupd bundle-add --quiet linux-lts2018-dev make c-basic dev-utils devpkg-systemd
@@ -266,88 +270,6 @@ function _vercmp {
     esac
 }
 
-function install_vagrant {
-    if command -v vagrant; then
-        if _vercmp "$(vagrant version | awk 'NR==1{print $3}')" '>=' "$vagrant_version"; then
-            return
-        fi
-    fi
-
-    pushd "$(mktemp -d)"
-    msg+="- INFO: Installing vagrant $vagrant_version\n"
-    vagrant_pkg="vagrant_${vagrant_version}_x86_64."
-    case ${ID,,} in
-        opensuse*)
-            vagrant_pgp="pgp_keys.asc"
-            vagrant_pkg+="rpm"
-            wget -q "https://keybase.io/hashicorp/$vagrant_pgp"
-            wget -q "https://releases.hashicorp.com/vagrant/$vagrant_version/$vagrant_pkg"
-            gpg --quiet --with-fingerprint "$vagrant_pgp"
-            sudo rpm --import "$vagrant_pgp"
-            sudo rpm --checksig "$vagrant_pkg"
-            sudo rpm --install "$vagrant_pkg"
-            rm $vagrant_pgp
-        ;;
-        ubuntu|debian)
-            vagrant_pkg+="deb"
-            wget -q "https://releases.hashicorp.com/vagrant/$vagrant_version/$vagrant_pkg"
-            sudo dpkg -i "$vagrant_pkg"
-        ;;
-        rhel|centos|fedora)
-            vagrant_pkg+="rpm"
-            wget -q "https://releases.hashicorp.com/vagrant/$vagrant_version/$vagrant_pkg"
-            $INSTALLER_CMD "$vagrant_pkg"
-        ;;
-        clear-linux-os)
-            vagrant_pkg="vagrant_${vagrant_version}_linux_amd64.zip"
-            wget -q "https://releases.hashicorp.com/vagrant/$vagrant_version/$vagrant_pkg"
-            unzip "$vagrant_pkg"
-            $INSTALLER_CMD devpkg-compat-fuse-soname2 fuse
-            sudo mkdir -p /usr/local/bin
-            sudo mv vagrant /usr/local/bin/
-        ;;
-    esac
-    rm $vagrant_pkg
-    popd
-    if [[ ${HTTP_PROXY+x} = "x"  ]]; then
-        vagrant plugin install vagrant-proxyconf
-    fi
-    vagrant plugin install vagrant-reload
-}
-
-function install_virtualbox {
-    if command -v VBoxManage; then
-        return
-    fi
-
-    pushd "$(mktemp -d)"
-    msg+="- INFO: Installing VirtualBox $virtualbox_version\n"
-    wget -q https://www.virtualbox.org/download/oracle_vbox.asc
-    case ${ID,,} in
-        opensuse*)
-            sudo wget -q "http://download.virtualbox.org/virtualbox/rpm/opensuse/virtualbox.repo" -P /etc/zypp/repos.d/
-            sudo rpm --import oracle_vbox.asc
-        ;;
-        ubuntu|debian)
-            $INSTALLER_CMD gnupg
-            echo "deb http://download.virtualbox.org/virtualbox/debian $UBUNTU_CODENAME contrib" | sudo tee /etc/apt/sources.list.d/virtualbox.list
-            wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
-            sudo apt-get update
-        ;;
-        rhel|centos|fedora)
-            sudo wget -q https://download.virtualbox.org/virtualbox/rpm/el/virtualbox.repo -P /etc/yum.repos.d
-            sudo rpm --import oracle_vbox.asc
-        ;;
-        clear-linux-os)
-            msg+="- WARN: The VirtualBox provider isn't supported by ${ID,,} yet.\n"
-            return
-        ;;
-    esac
-    rm oracle_vbox.asc
-    popd
-    $INSTALLER_CMD "VirtualBox-$virtualbox_version" dkms
-}
-
 function check_qemu {
     local qemu_tarball="qemu-${qemu_version}.tar.xz"
     local pmdk_version="1.4"
@@ -376,8 +298,8 @@ function check_qemu {
         ubuntu|debian)
             $INSTALLER_CMD libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev libnuma-dev
             pushd "$(mktemp -d)"
-            wget -c "https://github.com/pmem/pmdk/releases/download/${pmdk_version}/pmdk-${pmdk_version}-dpkgs.tar.gz"
-            tar xvf "pmdk-${pmdk_version}-dpkgs.tar.gz"
+            curl -o "pmdk-dpkgs.tar.gz" "https://github.com/pmem/pmdk/releases/download/${pmdk_version}/pmdk-${pmdk_version}-dpkgs.tar.gz"
+            tar xvf "pmdk-dpkgs.tar.gz"
             for pkg in libpmem libpmem-dev; do
                 sudo dpkg -i "${pkg}_${pmdk_version}-1_amd64.deb"
             done
@@ -391,7 +313,7 @@ function check_qemu {
     esac
 
     pushd "$(mktemp -d)"
-    wget -c "https://download.qemu.org/$qemu_tarball"
+    curl -o "$qemu_tarball" "https://download.qemu.org/$qemu_tarball"
     tar xvf "$qemu_tarball"
     pushd "qemu-${qemu_version}" || exit
     ./configure --target-list=x86_64-softmmu --enable-libpmem --enable-numa --enable-kvm
@@ -481,14 +403,6 @@ EOL
         kvm-ok
         ;;
     esac
-    if command -v vagrant; then
-        if [[ "${ID,,}" == *clear-linux-os* ]]; then
-            sudo ln -s /usr/lib64/libvirt /usr/lib/libvirt
-            msg+="- WARN: The libvirt vagrant plugin isn't supported by ${ID,,} yet.\n"
-        else
-            vagrant plugin install vagrant-libvirt
-        fi
-    fi
 }
 
 if ! sudo -n "true"; then
@@ -501,11 +415,6 @@ if ! sudo -n "true"; then
     exit 1
 fi
 
-if command -v wget; then
-    echo "Sync server's clock"
-    sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
-fi
-
 # shellcheck disable=SC1091
 source /etc/os-release || source /usr/lib/os-release
 if [[ ${ID+x} = "x"  ]]; then
@@ -515,13 +424,11 @@ fi
 case ${ID,,} in
     opensuse*)
     INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
-    sudo zypper -n ref
     ;;
 
     ubuntu|debian)
     libvirt_group="libvirtd"
     INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"
-    sudo apt-get update
     ;;
 
     rhel|centos|fedora)
@@ -530,26 +437,39 @@ case ${ID,,} in
     if ! sudo "$PKG_MANAGER" repolist | grep "epel/"; then
         $INSTALLER_CMD epel-release
     fi
-    sudo "$PKG_MANAGER" updateinfo
     ;;
     clear-linux-os)
     INSTALLER_CMD="sudo -H -E swupd bundle-add --quiet"
-    sudo swupd update --download
     ;;
 esac
 
-if ! command -v wget; then
-    $INSTALLER_CMD wget
+if ! command -v curl; then
+    $INSTALLER_CMD curl
 fi
 
-if [[ "${ENABLE_VAGRANT_INSTALL:-true}" == "true" ]]; then
-    install_vagrant
-fi
+pkgs="vagrant"
 case ${PROVIDER} in
-    libvirt|virtualbox)
-        "install_${PROVIDER}"
+    virtualbox)
+        pkgs+=" virtualbox"
+    ;;
+    libvirt)
+        install_libvirt
     ;;
 esac
+curl -fsSL http://bit.ly/pkgInstall | PKG="$pkgs" PKG_UDPATE=true bash
+msg+="- INFO: Installing vagrant $PKG_VAGRANT_VERSION\n"
+if [[ ${HTTP_PROXY+x} = "x"  ]]; then
+    vagrant plugin install vagrant-proxyconf
+fi
+if [[ "${PROVIDER}" == "libvirt" ]]; then
+    if [[ "${ID,,}" == *clear-linux-os* ]]; then
+        sudo ln -s /usr/lib64/libvirt /usr/lib/libvirt
+        msg+="- WARN: The libvirt vagrant plugin isn't supported by ClearLinux yet.\n"
+    else
+        vagrant plugin install vagrant-libvirt
+    fi
+fi
+vagrant plugin install vagrant-reload
 
 enable_iommu
 enable_nested_virtualization
