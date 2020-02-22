@@ -456,7 +456,7 @@ case ${PROVIDER} in
         install_libvirt
     ;;
 esac
-curl -fsSL http://bit.ly/pkgInstall | PKG="$pkgs" PKG_UDPATE=true bash
+curl -fsSL http://bit.ly/install_pkg | PKG="$pkgs" PKG_UDPATE=true bash
 msg+="- INFO: Installing vagrant $PKG_VAGRANT_VERSION\n"
 if [[ ${HTTP_PROXY+x} = "x"  ]]; then
     vagrant plugin install vagrant-proxyconf
