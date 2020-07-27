@@ -363,8 +363,12 @@ vagrant plugin install vagrant-reload
 
 enable_iommu
 enable_nested_virtualization
-create_sriov_vfs
-create_qat_vfs
+if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
+    create_sriov_vfs
+fi
+if [ "${CREATE_QAT_VFS:-false}" == "true" ]; then
+    create_qat_vfs
+fi
 
 trap ERR
 echo -e "$msg"

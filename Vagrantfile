@@ -67,7 +67,9 @@ Vagrant.configure("2") do |config|
   config.vm.provision :reload
   config.vm.provision 'shell', privileged: false do |sh|
     sh.env = {
-      'DEBUG': "true"
+      'DEBUG': "true",
+      'CREATE_SRIOV_VFS': "true",
+      'CREATE_QAT_VFS': "true"
     }
     sh.inline = <<-SHELL
       set -o xtrace
