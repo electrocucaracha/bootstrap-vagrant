@@ -86,8 +86,8 @@ Vagrant.configure("2") do |config|
 
   [:virtualbox, :libvirt].each do |provider|
   config.vm.provider provider do |p|
-      p.cpus = 4
-      p.memory = 8192
+      p.cpus = 1
+      p.memory = 6144
     end
   end
 
