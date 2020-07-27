@@ -14,26 +14,27 @@ $no_proxy = ENV['NO_PROXY'] || ENV['no_proxy'] || "127.0.0.1,localhost"
   $no_proxy += ",192.168.121.#{i}"
 end
 $no_proxy += ",10.0.2.15"
+$provider = ENV['PROVIDER'] || "libvirt"
 
 File.exists?("/usr/share/qemu/OVMF.fd") ? loader = "/usr/share/qemu/OVMF.fd" : loader = File.join(File.dirname(__FILE__), "OVMF.fd")
 if not File.exists?(loader)
   system('curl -O https://download.clearlinux.org/image/OVMF.fd')
 end
+
 distros = YAML.load_file(File.dirname(__FILE__) + '/distros_supported.yml')
 
 Vagrant.configure("2") do |config|
   config.vm.provider :libvirt
   config.vm.provider :virtualbox
 
-  config.vm.synced_folder './', '/vagrant', type: "rsync"
-  provider = (ENV['PROVIDER'] || :libvirt).to_sym
-
-  distros.each do |distro|
-    config.vm.define "#{distro['name']}_#{provider}" do |node|
-      node.vm.box = distro["box"]
+  config.vm.synced_folder './', '/vagrant', type: "rsync",
+    rsync__args: ["--verbose", "--archive", "--delete", "-z"]
+  distros["linux"].each do |distro|
+    config.vm.define "#{distro['alias']}_#{$provider}" do |node|
+      node.vm.box = distro["name"]
       node.vm.box_version = distro["version"]
       node.vm.box_check_update = false
-      if distro["name"] == "clearlinux"
+      if distro["alias"] == "clearlinux"
         node.vm.provider 'libvirt' do |v|
           v.loader = loader
         end
@@ -71,15 +72,15 @@ Vagrant.configure("2") do |config|
     sh.inline = <<-SHELL
       set -o xtrace
       cd /vagrant/
-      PROVIDER=#{provider} ./setup.sh
+      PROVIDER=#{$provider} ./setup.sh | tee  ~/setup.log
     SHELL
   end
   config.vm.provision :reload
   config.vm.provision 'shell', privileged: false do |sh|
     sh.inline = <<-SHELL
-      cd /vagrant/
-      source /etc/os-release || source /usr/lib/os-release
-      ./validate.sh | tee validate_${ID,,}_#{provider}.log
+      set -o errexit
+      cd /vagrant
+      ./validate.sh
     SHELL
   end
 
@@ -88,6 +89,11 @@ Vagrant.configure("2") do |config|
       p.cpus = 4
       p.memory = 8192
     end
+  end
+
+  config.vm.provider :virtualbox do |v|
+    v.gui = false
+    v.customize ["modifyvm", :id, "--nested-hw-virt","on"]
   end
 
   config.vm.provider :libvirt do |v|
@@ -102,6 +108,7 @@ Vagrant.configure("2") do |config|
       config.proxy.http     = ENV['http_proxy'] || ENV['HTTP_PROXY'] || ""
       config.proxy.https    = ENV['https_proxy'] || ENV['HTTPS_PROXY'] || ""
       config.proxy.no_proxy = $no_proxy
+      config.proxy.enabled = { docker: false, git: false }
     end
   end
 end

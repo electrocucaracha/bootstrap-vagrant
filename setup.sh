@@ -13,11 +13,12 @@ set -o errexit
 set -o pipefail
 
 msg="Summary \n"
-export PKG_VAGRANT_VERSION=2.2.6
+export PKG_VAGRANT_VERSION=2.2.9
 export PKG_VIRTUALBOX_VERSION=6.0
 qemu_version=4.1.0
 if [ "${DEBUG:-false}" == "true" ]; then
     set -o xtrace
+    export PKG_DEBUG=true
 fi
 
 function _reload_grub {
@@ -271,9 +272,6 @@ function _vercmp {
 }
 
 function check_qemu {
-    local qemu_tarball="qemu-${qemu_version}.tar.xz"
-    local pmdk_version="1.4"
-
     if command -v qemu-system-x86_64; then
         qemu_version_installed=$(qemu-system-x86_64 --version | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')
         if _vercmp "${qemu_version_installed}" '>' "2.6.0"; then
@@ -294,115 +292,12 @@ function check_qemu {
     fi
 
     msg+="- INFO: Installing QEMU $qemu_version\n"
-    case ${ID,,} in
-        ubuntu|debian)
-            $INSTALLER_CMD libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev libnuma-dev
-            pushd "$(mktemp -d)"
-            curl -o "pmdk-dpkgs.tar.gz" "https://github.com/pmem/pmdk/releases/download/${pmdk_version}/pmdk-${pmdk_version}-dpkgs.tar.gz"
-            tar xvf "pmdk-dpkgs.tar.gz"
-            for pkg in libpmem libpmem-dev; do
-                sudo dpkg -i "${pkg}_${pmdk_version}-1_amd64.deb"
-            done
-            popd
-        ;;
-        rhel|centos|fedora)
-            $INSTALLER_CMD epel-release
-            $INSTALLER_CMD glib2-devel libfdt-devel pixman-devel zlib-devel python3 libpmem-devel numactl-devel
-            sudo -H -E "${PKG_MANAGER}" -q -y group install "Development Tools"
-        ;;
-    esac
-
-    pushd "$(mktemp -d)"
-    curl -o "$qemu_tarball" "https://download.qemu.org/$qemu_tarball"
-    tar xvf "$qemu_tarball"
-    pushd "qemu-${qemu_version}" || exit
-    ./configure --target-list=x86_64-softmmu --enable-libpmem --enable-numa --enable-kvm
-    make
-    sudo make install
-    popd
-    popd
+    curl -fsSL http://bit.ly/install_pkg | PKG="qemu" bash
 }
 
-function install_libvirt {
-    if command -v virsh; then
-        return
-    fi
-
-    msg+="- INFO: Installing Libvirt\n"
-    libvirt_group="libvirt"
-    packages=(qemu )
-    case ${ID,,} in
-        opensuse*)
-        # vagrant-libvirt dependencies
-        packages+=(libvirt libvirt-devel ruby-devel gcc qemu-kvm zlib-devel libxml2-devel libxslt-devel make)
-        # NFS
-        packages+=(nfs-kernel-server)
-        ;;
-        ubuntu|debian)
-        if [[ "${VERSION_ID}" == *16.04* ]]; then
-            libvirt_group+="d"
-        fi
-        # vagrant-libvirt dependencies
-        packages+=(libvirt-bin ebtables dnsmasq libxslt-dev libxml2-dev libvirt-dev zlib1g-dev ruby-dev cpu-checker)
-        # NFS
-        packages+=(nfs-kernel-server)
-        ;;
-        rhel|centos|fedora)
-        # vagrant-libvirt dependencies
-        packages+=(libvirt libvirt-devel ruby-devel gcc qemu-kvm)
-        # NFS
-        packages+=(nfs-utils nfs-utils-lib)
-        ;;
-        clear-linux-os)
-        # vagrant-libvirt dependencies
-        packages=(kvm-host devpkg-libvirt)
-        # NFS
-        packages+=(nfs-utils)
-        sudo touch /etc/exports
-	sudo tee /etc/systemd/system/rpc-statd.service << EOL
-[Unit]
-Description=NFS status monitor for NFSv2/3 locking.
-
-[Service]
-Type=forking
-PIDFile=/var/run/rpc.statd.pid
-ExecStart=/usr/bin/rpc.statd --no-notify
-
-[Install]
-WantedBy=nfs-server.service
-EOL
-        ;;
-    esac
-    ${INSTALLER_CMD} "${packages[@]}"
-    sudo usermod -a -G $libvirt_group "$USER" # This might require to reload user's group assigments
-
-    # Start libvirt service
-    if ! systemctl is-enabled --quiet libvirtd; then
-        sudo systemctl enable libvirtd
-    fi
-    sudo systemctl start libvirtd
-
-    # Start statd service to prevent NFS lock errors
-    if ! systemctl is-enabled --quiet rpc-statd; then
-        sudo systemctl enable rpc-statd
-    fi
-    sudo systemctl start rpc-statd
-
-    if command -v firewall-cmd && systemctl is-active --quiet firewalld; then
-        for svc in nfs rpc-bind mountd; do
-            sudo firewall-cmd --permanent --add-service="${svc}" --zone=trusted
-        done
-        sudo firewall-cmd --set-default-zone=trusted
-        sudo firewall-cmd --reload
-    fi
-    sudo systemctl --now enable rpcbind nfs-server
-
-    check_qemu
-    case ${ID,,} in
-        ubuntu|debian)
-        kvm-ok
-        ;;
-    esac
+function exit_trap() {
+    echo -e "$msg"
+    printenv
 }
 
 if ! sudo -n "true"; then
@@ -415,6 +310,8 @@ if ! sudo -n "true"; then
     exit 1
 fi
 
+trap exit_trap ERR
+
 # shellcheck disable=SC1091
 source /etc/os-release || source /usr/lib/os-release
 if [[ ${ID+x} = "x"  ]]; then
@@ -423,23 +320,27 @@ if [[ ${ID+x} = "x"  ]]; then
 fi
 case ${ID,,} in
     opensuse*)
-    INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
+        sudo zypper -n ref
+        INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
     ;;
 
     ubuntu|debian)
-    libvirt_group="libvirtd"
-    INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"
+        echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections
+        sudo apt-get update
+        INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"
     ;;
 
     rhel|centos|fedora)
-    PKG_MANAGER=$(command -v dnf || command -v yum)
-    INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install"
-    if ! sudo "$PKG_MANAGER" repolist | grep "epel/"; then
-        $INSTALLER_CMD epel-release
-    fi
+        PKG_MANAGER=$(command -v dnf || command -v yum)
+        INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install"
+        if ! sudo "$PKG_MANAGER" repolist | grep "epel/"; then
+            $INSTALLER_CMD epel-release
+        fi
+        sudo "$PKG_MANAGER" updateinfo --assumeyes
     ;;
     clear-linux-os)
-    INSTALLER_CMD="sudo -H -E swupd bundle-add --quiet"
+        INSTALLER_CMD="sudo -H -E swupd bundle-add --quiet"
+        sudo swupd update --download
     ;;
 esac
 
@@ -453,21 +354,19 @@ case ${PROVIDER} in
         pkgs+=" virtualbox"
     ;;
     libvirt)
-        install_libvirt
+        $INSTALLER_CMD qemu || :
+        pkgs+=" bridge-utils dnsmasq ebtables libvirt"
+        pkgs+=" qemu-kvm ruby-devel gcc nfs make"
     ;;
 esac
 curl -fsSL http://bit.ly/install_pkg | PKG="$pkgs" PKG_UPDATE=true bash
 msg+="- INFO: Installing vagrant $PKG_VAGRANT_VERSION\n"
-if [[ ${HTTP_PROXY+x} = "x"  ]]; then
+if [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ] || [ -n "${NO_PROXY:-}" ]; then
     vagrant plugin install vagrant-proxyconf
 fi
-if [[ "${PROVIDER}" == "libvirt" ]]; then
-    if [[ "${ID,,}" == *clear-linux-os* ]]; then
-        sudo ln -s /usr/lib64/libvirt /usr/lib/libvirt
-        msg+="- WARN: The libvirt vagrant plugin isn't supported by ClearLinux yet.\n"
-    else
-        vagrant plugin install vagrant-libvirt
-    fi
+if [ "${PROVIDER}" == "libvirt" ]; then
+    vagrant plugin install vagrant-libvirt
+    check_qemu
 fi
 vagrant plugin install vagrant-reload
 
@@ -476,4 +375,4 @@ enable_nested_virtualization
 create_sriov_vfs
 create_qat_vfs
 
-echo -e "$msg" | tee ~/boostrap-vagrant.log
+trap ERR

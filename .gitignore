@@ -2,3 +2,4 @@
 .tox/
 *.log
 OVMF.fd
+*swp

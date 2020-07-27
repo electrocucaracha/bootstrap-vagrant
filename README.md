@@ -1,5 +1,6 @@
 # Bootstrap Vagrant
 [![Build Status](https://travis-ci.org/electrocucaracha/bootstrap-vagrant.png)](https://travis-ci.org/electrocucaracha/bootstrap-vagrant)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This project was created to ensure that [setup.sh](setup.sh)
 bash script is able to install [Vagrant tool][1] in different Linux
@@ -8,12 +9,10 @@ and providers.
 
 ## Linux Distros
 
-| Name       | Version     |
-|:-----------|:-----------:|
-| Ubuntu     | 16.04/18.04 |
-| CentOS     | 7/8         |
-| OpenSUSE   | Tumbleweed  |
-| ClearLinux | 31830       |
+| Name       | Version |
+|:-----------|:-------:|
+| Ubuntu     | 18.04   |
+| CentOS     | 7       |
 
 ## Vagrant Providers
 
@@ -43,10 +42,5 @@ is created to summarize the actions that were taken.
 | Name                   | Default | Description                                         |
 |:-----------------------|:-------:|:----------------------------------------------------|
 | PROVIDER               |         | Specifies the Vagrant Provider to be installed      |
-| ENABLE_VAGRANT_INSTALL | true    | Enable or disable the installation of Vagrant tools |
-
-## License
-
-Apache-2.0
 
 [1]: https://www.vagrantup.com/

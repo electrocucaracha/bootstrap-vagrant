@@ -10,44 +10,74 @@
 
 set -o nounset
 set -o pipefail
+set -o errexit
 
-if ! command -v vagrant; then
-    echo "ERROR: Vagrant command line wasn't installed"
+function info {
+    _print_msg "INFO" "$1"
+}
+
+function warn {
+    _print_msg "WARN" "$1"
+}
+
+function error {
+    _print_msg "ERROR" "$1"
+}
+
+function _print_msg {
+    msg+="$(date +%H:%M:%S) - $1: $2\n"
+}
+
+function print_summary {
+    echo -e "$msg"
+}
+
+msg="Summary:\n\n"
+trap print_summary ERR
+
+if ! command -v vagrant > /dev/null; then
+    error "Vagrant command line wasn't installed"
 fi
 
-if [[ "$(vagrant version | awk 'NR==1{print $3}')" != "2.2.6" ]]; then
-    echo "ERROR: Vagrant command line has different version"
+if [[ "$(vagrant version | awk 'NR==1{print $3}')" != "2.2.9" ]]; then
+    error "Vagrant command line has different version"
 fi
 
-if command -v VBoxManage; then
-    echo "INFO: VirtualBox command line was installed"
-elif command -v virsh; then
-    echo "INFO: Libvirt command line was installed"
-    iommu_support=$(sudo virt-host-validate qemu | grep 'Checking for device assignment IOMMU support')
+if command -v VBoxManage > /dev/null; then
+    info "VirtualBox command line was installed"
+elif command -v virsh > /dev/null; then
+    info "Libvirt command line was installed"
+    qemu_validate=$(sudo virt-host-validate qemu || :)
+    # shellcheck disable=SC2001
+    iommu_support=$(echo "$qemu_validate" | sed "s|.*Checking for device assignment IOMMU support||")
     if [[ "$iommu_support" != *PASS* ]]; then
-        awk -F':' '{print $3}' <<< "$iommu_support"
+        info "QEMU doesn't support IOMMU,$(awk -F':' '{print $2}' <<< "$iommu_support")"
     fi
 else
-    echo "ERROR: VirtualBox/Libvirt command line wasn't installed"
+    error "VirtualBox/Libvirt command line wasn't installed"
 fi
 
+info "Validating Nested Virtualization"
 vendor_id=$(lscpu|grep "Vendor ID")
 if [[ $vendor_id == *GenuineIntel* ]]; then
     kvm_ok=$(cat /sys/module/kvm_intel/parameters/nested)
     if [[ $kvm_ok == 'N' ]]; then
-        echo "ERROR: Nested-Virtualization wasn't enabled for this Intel processor"
+        error "Nested-Virtualization wasn't enabled for this Intel processor"
     fi
 else
     kvm_ok=$(cat /sys/module/kvm_amd/parameters/nested)
     if [[ $kvm_ok == '0' ]]; then
-        echo "ERROR: Nested-Virtualization wasn't enabled for this processor"
+        error "Nested-Virtualization wasn't enabled for this processor"
     fi
 fi
 
-if ! sudo /etc/init.d/qat_service status | grep "There is .* QAT acceleration device(s) in the system:"; then
-    echo "ERROR: QAT drivers and/or service weren't installed properly"
+info "Validating Intel QuickAssist drivers installation"
+if ! sudo /etc/init.d/qat_service status | grep "There is .* QAT acceleration device(s) in the system:" > /dev/null; then
+    error "QAT drivers and/or service weren't installed properly"
 else
     if [[ -z "$(for i in 0442 0443 37c9 19e3; do lspci -d 8086:$i; done)" ]]; then
-        echo "ERROR: There are no Virtual Functions enabled for any QAT device"
+        warn "There are no Virtual Functions enabled for any QAT device"
     fi
 fi
+trap ERR
+print_summary
