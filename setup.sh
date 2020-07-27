@@ -298,6 +298,7 @@ function check_qemu {
 function exit_trap() {
     echo -e "$msg"
     printenv
+    exit 1
 }
 
 if ! sudo -n "true"; then
@@ -319,17 +320,11 @@ if [[ ${ID+x} = "x"  ]]; then
     eval "$id_os"
 fi
 case ${ID,,} in
-    opensuse*)
-        sudo zypper -n ref
-        INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
-    ;;
-
     ubuntu|debian)
         echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections
         sudo apt-get update
         INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"
     ;;
-
     rhel|centos|fedora)
         PKG_MANAGER=$(command -v dnf || command -v yum)
         INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install"
@@ -337,10 +332,6 @@ case ${ID,,} in
             $INSTALLER_CMD epel-release
         fi
         sudo "$PKG_MANAGER" updateinfo --assumeyes
-    ;;
-    clear-linux-os)
-        INSTALLER_CMD="sudo -H -E swupd bundle-add --quiet"
-        sudo swupd update --download
     ;;
 esac
 
@@ -376,3 +367,4 @@ create_sriov_vfs
 create_qat_vfs
 
 trap ERR
+echo -e "$msg"

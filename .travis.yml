@@ -30,6 +30,9 @@ jobs:
       script:
         - tox -e lint
         - shellcheck -x *.sh
+    - name: Validating Bare Metal installation
+      script:
+        - PROVIDER=libvirt ./setup.sh
     - name: Ubuntu 18.04 LTS validation using Libvirt provider
       script:
         - PROVIDER=libvirt sudo -E vagrant up ubuntu_bionic_libvirt
