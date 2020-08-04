@@ -9,10 +9,11 @@ and providers.
 
 ## Linux Distros
 
-| Name       | Version |
-|:-----------|:-------:|
-| Ubuntu     | 18.04   |
-| CentOS     | 7       |
+| Name       | Version    |
+|:-----------|:----------:|
+| Ubuntu     | 18.04      |
+| CentOS     | 7          |
+| openSUSE   | Tumbleweed |
 
 ## Vagrant Providers
 

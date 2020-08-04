@@ -53,3 +53,13 @@ jobs:
         - PROVIDER=virtualbox sudo -E vagrant up centos_7_virtualbox
       env:
         - VAGRANT_EXECUTION=true
+    - name: openSUSE Tumbleweed validation using Libvirt provider
+      script:
+        - PROVIDER=libvirt sudo -E vagrant up opensuse_libvirt
+      env:
+        - VAGRANT_EXECUTION=true
+    - name: openSUSE Tumbleweed validation using VirtualBox provider
+      script:
+        - PROVIDER=virtualbox sudo -E vagrant up opensuse_virtualbox
+      env:
+        - VAGRANT_EXECUTION=true

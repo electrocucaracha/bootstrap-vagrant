@@ -320,6 +320,12 @@ if [[ ${ID+x} = "x"  ]]; then
     eval "$id_os"
 fi
 case ${ID,,} in
+    *suse*)
+        CONFIGURE_ARGS="with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib64"
+        export CONFIGURE_ARGS
+        sudo zypper -n ref
+        INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
+    ;;
     ubuntu|debian)
         echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections
         sudo apt-get update
