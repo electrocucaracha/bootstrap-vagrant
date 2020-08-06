@@ -43,5 +43,7 @@ is created to summarize the actions that were taken.
 | Name                   | Default | Description                                         |
 |:-----------------------|:-------:|:----------------------------------------------------|
 | PROVIDER               |         | Specifies the Vagrant Provider to be installed      |
+| CREATE_SRIOV_VFS       | false   | Creates SR-IOV Virtual Functions                    |
+| CREATE_QAT_VFS         | false   | Creates QuickAssit Virtual Functions                |
 
 [1]: https://www.vagrantup.com/

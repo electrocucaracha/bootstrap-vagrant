@@ -33,9 +33,9 @@ jobs:
     - name: Validating Bare Metal installation
       script:
         - PROVIDER=libvirt ./setup.sh
-    - name: Ubuntu 18.04 LTS validation using Libvirt provider
+    - name: Ubuntu 18.04 LTS validation using Libvirt provider + Create SR-IOV VFs + Create QAT VFs
       script:
-        - PROVIDER=libvirt sudo -E vagrant up ubuntu_bionic_libvirt
+        - PROVIDER=libvirt CREATE_SRIOV_VFS=true CREATE_QAT_VFS=true sudo -E vagrant up ubuntu_bionic_libvirt
       env:
         - VAGRANT_EXECUTION=true
     - name: Ubuntu 18.04 LTS validation using VirtualBox provider
@@ -43,9 +43,9 @@ jobs:
         - PROVIDER=virtualbox sudo -E vagrant up ubuntu_bionic_virtualbox
       env:
         - VAGRANT_EXECUTION=true
-    - name: CentOS 7 validation using Libvirt provider
+    - name: CentOS 7 validation using Libvirt provider + Create SR-IOV VFs + Create QAT VFs
       script:
-        - PROVIDER=libvirt sudo -E vagrant up centos_7_libvirt
+        - PROVIDER=libvirt CREATE_SRIOV_VFS=true CREATE_QAT_VFS=true sudo -E vagrant up centos_7_libvirt
       env:
         - VAGRANT_EXECUTION=true
     - name: CentOS 7 validation using VirtualBox provider

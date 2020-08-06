@@ -15,6 +15,7 @@ set -o pipefail
 msg="Summary \n"
 export PKG_VAGRANT_VERSION=2.2.9
 export PKG_VIRTUALBOX_VERSION=6.0
+export PKG_QAT_DRIVER_VERSION=1.7.l.4.6.0-00025
 qemu_version=4.1.0
 if [ "${DEBUG:-false}" == "true" ]; then
     set -o xtrace
@@ -77,13 +78,7 @@ function enable_nested_virtualization {
     sudo modprobe vhost_net
 }
 
-function _install_sysfsutils {
-    local sysfsutil_pkg="sysfsutils"
-
-    if [[ "${ID,,}" == *clear-linux-os* ]]; then
-        sysfsutil_pkg="openstack-common"
-    fi
-    $INSTALLER_CMD $sysfsutil_pkg
+function _enable_rc_local {
     if [ ! -f /etc/rc.d/rc.local ]; then
         sudo mkdir -p /etc/rc.d/
         echo '#!/bin/bash' | sudo tee /etc/rc.d/rc.local
@@ -113,10 +108,7 @@ EOL'
 
 # create_sriov_vfs() - Function that creates Virtual Functions for Single Root I/O Virtualization (SR-IOV)
 function create_sriov_vfs {
-    if ! command -v lshw; then
-        $INSTALLER_CMD lshw
-    fi
-    _install_sysfsutils
+    _enable_rc_local
     for nic in $(sudo lshw -C network -short | grep Connection | awk '{ print $2 }'); do
         if [ -e "/sys/class/net/$nic/device/sriov_numvfs" ]  && grep -e up "/sys/class/net/$nic/operstate" > /dev/null ; then
             sriov_numvfs=$(cat "/sys/class/net/$nic/device/sriov_totalvfs")
@@ -130,97 +122,9 @@ function create_sriov_vfs {
     done
 }
 
-function _install_qat_driver {
-    local qat_driver_version="1.7.l.4.6.0-00025" # Jul 23, 2019 https://01.org/intel-quick-assist-technology/downloads
-    local qat_driver_tarball="qat${qat_driver_version}.tar.gz"
-    if systemctl is-active --quiet qat_service; then
-        return
-    fi
-
-    if [ ! -d /tmp/qat ]; then
-        curl -o $qat_driver_tarball "https://01.org/sites/default/files/downloads/${qat_driver_tarball}"
-        sudo mkdir -p /tmp/qat
-        sudo tar -C /tmp/qat -xzf "$qat_driver_tarball"
-        rm "$qat_driver_tarball"
-    fi
-
-    case ${ID,,} in
-        opensuse*)
-            sudo -H -E zypper -q install -y -t pattern devel_C_C++
-            sudo -H -E zypper -q install -y --no-recommends pciutils libudev-devel openssl-devel gcc-c++ kernel-source kernel-syms
-            msg+="- WARN: The Intel QuickAssist Technology drivers don't have full support in {ID,,} yet.\n"
-            return
-        ;;
-        ubuntu|debian)
-            sudo -H -E apt-get -y -q=3 install build-essential "linux-headers-$(uname -r)" pciutils libudev-dev pkg-config
-        ;;
-        rhel|centos|fedora)
-            PKG_MANAGER=$(command -v dnf || command -v yum)
-            sudo "${PKG_MANAGER}" groups mark install -y "Development Tools"
-            sudo "${PKG_MANAGER}" groups install -y "Development Tools"
-            INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install kernel-devel-$(uname -r) pciutils libudev-devel gcc openssl-devel"
-            if [[ "${VERSION_ID}" == *7* ]]; then
-                INSTALLER_CMD+=" yum-plugin-fastestmirror"
-            fi
-            $INSTALLER_CMD
-        ;;
-        clear-linux-os)
-            sudo -H -E swupd bundle-add --quiet linux-lts2018-dev make c-basic dev-utils devpkg-systemd
-        ;;
-    esac
-
-    for mod in $(lsmod | grep "^intel_qat" | awk '{print $4}'); do
-        sudo rmmod "$mod"
-    done
-    if lsmod | grep "^intel_qat"; then
-        sudo rmmod intel_qat
-    fi
-
-    sudo tee /lib/modprobe.d/quickassist-blacklist.conf  << EOF
-### Blacklist in-kernel QAT drivers to avoid kernel boot problems.
-# Lewisburg QAT PF
-blacklist qat_c62x
-
-# Common QAT driver
-blacklist intel_qat
-EOF
-
-    pushd /tmp/qat
-    sudo ./configure --enable-icp-sriov=host
-    for action in clean uninstall install; do
-        sudo make $action
-    done
-    popd
-
-    if [[ "${ID,,}" == *clear-linux-os* ]]; then
-        sudo tee /etc/systemd/system/qat_service.service << EOF
-[Unit]
-Description=Intel QuickAssist Technology service
-
-[Service]
-Type=forking
-Restart=no
-TimeoutSec=5min
-IgnoreSIGPIPE=no
-KillMode=process
-GuessMainPID=no
-RemainAfterExit=yes
-ExecStart=/etc/init.d/qat_service start
-ExecStop=/etc/init.d/qat_service stop
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    fi
-
-    sudo systemctl --now enable qat_service
-    msg+="- INFO: The Intel QuickAssist Technology drivers were installed using the $qat_driver_version version\n"
-}
-
 # create_qat_vfs() - Function that install Intel QuickAssist Technology drivers and enabled its Virtual Functions
 function create_qat_vfs {
-    _install_qat_driver
-    _install_sysfsutils
+    _enable_rc_local
 
     for qat_dev in $(for i in 0434 0435 37c8 6f54 19e2; do lspci -d 8086:$i -m; done|awk '{print $1}'); do
         qat_numvfs=$(cat "/sys/bus/pci/devices/0000:$qat_dev/sriov_totalvfs")
@@ -315,10 +219,6 @@ trap exit_trap ERR
 
 # shellcheck disable=SC1091
 source /etc/os-release || source /usr/lib/os-release
-if [[ ${ID+x} = "x"  ]]; then
-    id_os="export $(grep "^ID=" /etc/os-release)"
-    eval "$id_os"
-fi
 case ${ID,,} in
     *suse*)
         CONFIGURE_ARGS="with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib64"
@@ -341,10 +241,6 @@ case ${ID,,} in
     ;;
 esac
 
-if ! command -v curl; then
-    $INSTALLER_CMD curl
-fi
-
 pkgs="vagrant"
 case ${PROVIDER} in
     virtualbox)
@@ -356,24 +252,35 @@ case ${PROVIDER} in
         pkgs+=" qemu-kvm ruby-devel gcc nfs make"
     ;;
 esac
+if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
+    pkgs+=" sysfsutils lshw"
+fi
+if [ "${CREATE_QAT_VFS:-false}" == "true" ]; then
+    pkgs+=" qat-driver"
+fi
+
 curl -fsSL http://bit.ly/install_pkg | PKG="$pkgs" PKG_UPDATE=true bash
 msg+="- INFO: Installing vagrant $PKG_VAGRANT_VERSION\n"
+
 if [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ] || [ -n "${NO_PROXY:-}" ]; then
     vagrant plugin install vagrant-proxyconf
 fi
 if [ "${PROVIDER}" == "libvirt" ]; then
+    msg+="- INFO: Installing vagrant-libvirt plugin\n"
     vagrant plugin install vagrant-libvirt
     check_qemu
+    enable_iommu
+    enable_nested_virtualization
 fi
 vagrant plugin install vagrant-reload
 
-enable_iommu
-enable_nested_virtualization
 if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
     create_sriov_vfs
+    msg+="- INFO: SR-IOV Virtual Functions were created\n"
 fi
 if [ "${CREATE_QAT_VFS:-false}" == "true" ]; then
     create_qat_vfs
+    msg+="- INFO: The Intel QuickAssist Technology drivers were installed using the $PKG_QAT_DRIVER_VERSION version\n"
 fi
 
 trap ERR

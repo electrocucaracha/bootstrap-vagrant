@@ -15,6 +15,8 @@ $no_proxy = ENV['NO_PROXY'] || ENV['no_proxy'] || "127.0.0.1,localhost"
 end
 $no_proxy += ",10.0.2.15"
 $provider = ENV['PROVIDER'] || "libvirt"
+$create_sriov_vfs = ENV['CREATE_SRIOV_VFS'] || "false"
+$create_qat_vfs = ENV['CREATE_QAT_VFS'] || "false"
 
 File.exists?("/usr/share/qemu/OVMF.fd") ? loader = "/usr/share/qemu/OVMF.fd" : loader = File.join(File.dirname(__FILE__), "OVMF.fd")
 if not File.exists?(loader)
@@ -42,6 +44,18 @@ Vagrant.configure("2") do |config|
     end
   end
 
+  # Install requirements
+  config.vm.provision 'shell', privileged: false, inline: <<-SHELL
+    if ! command -v curl; then
+        source /etc/os-release || source /usr/lib/os-release
+        case ${ID,,} in
+            ubuntu|debian)
+                sudo apt-get update -qq > /dev/null
+                sudo apt-get install -y -qq -o=Dpkg::Use-Pty=0 curl
+            ;;
+        esac
+    fi
+  SHELL
   # Upgrade Kernel version
   config.vm.provision 'shell', privileged: false, inline: <<-SHELL
     source /etc/os-release || source /usr/lib/os-release
@@ -68,8 +82,8 @@ Vagrant.configure("2") do |config|
   config.vm.provision 'shell', privileged: false do |sh|
     sh.env = {
       'DEBUG': "true",
-      'CREATE_SRIOV_VFS': "true",
-      'CREATE_QAT_VFS': "true"
+      'CREATE_SRIOV_VFS': "#{$create_sriov_vfs}",
+      'CREATE_QAT_VFS': "#{$create_qat_vfs}"
     }
     sh.inline = <<-SHELL
       set -o xtrace
