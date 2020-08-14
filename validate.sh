@@ -79,5 +79,27 @@ else
         warn "There are no Virtual Functions enabled for any QAT device"
     fi
 fi
+
+info "Validating Vagrant operation"
+pushd "$(mktemp -d)"
+cat << EOT > vagrant_file.erb
+Vagrant.configure("2") do |config|
+  config.vm.provider :libvirt
+  config.vm.provider :virtualbox
+
+  config.vm.box = "<%= box_name %>"
+
+  [:virtualbox, :libvirt].each do |provider|
+  config.vm.provider provider do |p|
+      p.cpus = 1
+      p.memory = 512
+    end
+  end
+end
+EOT
+vagrant init centos/7 --template vagrant_file.erb
+vagrant status
+popd
+
 trap ERR
 print_summary
