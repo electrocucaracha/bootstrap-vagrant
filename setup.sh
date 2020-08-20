@@ -59,20 +59,24 @@ function enable_iommu {
 function enable_nested_virtualization {
     vendor_id=$(lscpu|grep "Vendor ID")
     if [[ $vendor_id == *GenuineIntel* ]]; then
-        kvm_ok=$(cat /sys/module/kvm_intel/parameters/nested)
-        if [[ $kvm_ok == 'N' ]]; then
-            msg+="- INFO: Intel Nested-Virtualization was enabled\n"
-            sudo rmmod kvm-intel
-            echo 'options kvm-intel nested=y' | sudo tee --append /etc/modprobe.d/dist.conf
-            sudo modprobe kvm-intel
+        if [ -f /sys/module/kvm_intel/parameters/nested ]; then
+            kvm_ok=$(cat /sys/module/kvm_intel/parameters/nested)
+            if [[ $kvm_ok == 'N' ]]; then
+                msg+="- INFO: Intel Nested-Virtualization was enabled\n"
+                sudo rmmod kvm-intel
+                echo 'options kvm-intel nested=y' | sudo tee --append /etc/modprobe.d/dist.conf
+                sudo modprobe kvm-intel
+            fi
         fi
     else
-        kvm_ok=$(cat /sys/module/kvm_amd/parameters/nested)
-        if [[ $kvm_ok == '0' ]]; then
-            msg+="- INFO: AMD Nested-Virtualization was enabled\n"
-            sudo rmmod kvm-amd
-            echo 'options kvm-amd nested=1' | sudo tee --append /etc/modprobe.d/dist.conf
-            sudo modprobe kvm-amd
+        if [ -f /sys/module/kvm_amd/parameters/nested ]; then
+            kvm_ok=$(cat /sys/module/kvm_amd/parameters/nested)
+            if [[ $kvm_ok == '0' ]]; then
+                msg+="- INFO: AMD Nested-Virtualization was enabled\n"
+                sudo rmmod kvm-amd
+                echo 'options kvm-amd nested=1' | sudo tee --append /etc/modprobe.d/dist.conf
+                sudo modprobe kvm-amd
+            fi
         fi
     fi
     sudo modprobe vhost_net
