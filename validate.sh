@@ -22,6 +22,7 @@ function warn {
 
 function error {
     _print_msg "ERROR" "$1"
+    exit 1
 }
 
 function _print_msg {
@@ -39,7 +40,7 @@ if ! command -v vagrant > /dev/null; then
     error "Vagrant command line wasn't installed"
 fi
 
-if [[ "$(vagrant version | awk 'NR==1{print $3}')" != "2.2.9" ]]; then
+if [[ "$(vagrant version | awk 'NR==1{print $3}')" != "2.2.10" ]]; then
     error "Vagrant command line has different version"
 fi
 
@@ -53,30 +54,32 @@ elif command -v virsh > /dev/null; then
     if [[ "$iommu_support" != *PASS* ]]; then
         info "QEMU doesn't support IOMMU,$(awk -F':' '{print $2}' <<< "$iommu_support")"
     fi
+
+    info "Validating Nested Virtualization"
+    vendor_id=$(lscpu|grep "Vendor ID")
+    if [[ $vendor_id == *GenuineIntel* ]]; then
+        kvm_ok=$(cat /sys/module/kvm_intel/parameters/nested)
+        if [[ $kvm_ok == 'N' ]]; then
+            error "Nested-Virtualization wasn't enabled for this Intel processor"
+        fi
+    else
+        kvm_ok=$(cat /sys/module/kvm_amd/parameters/nested)
+        if [[ $kvm_ok == '0' ]]; then
+            error "Nested-Virtualization wasn't enabled for this processor"
+        fi
+    fi
 else
     error "VirtualBox/Libvirt command line wasn't installed"
 fi
 
-info "Validating Nested Virtualization"
-vendor_id=$(lscpu|grep "Vendor ID")
-if [[ $vendor_id == *GenuineIntel* ]]; then
-    kvm_ok=$(cat /sys/module/kvm_intel/parameters/nested)
-    if [[ $kvm_ok == 'N' ]]; then
-        error "Nested-Virtualization wasn't enabled for this Intel processor"
-    fi
-else
-    kvm_ok=$(cat /sys/module/kvm_amd/parameters/nested)
-    if [[ $kvm_ok == '0' ]]; then
-        error "Nested-Virtualization wasn't enabled for this processor"
-    fi
-fi
-
-info "Validating Intel QuickAssist drivers installation"
-if ! sudo /etc/init.d/qat_service status | grep "There is .* QAT acceleration device(s) in the system:" > /dev/null; then
-    error "QAT drivers and/or service weren't installed properly"
-else
-    if [[ -z "$(for i in 0442 0443 37c9 19e3; do lspci -d 8086:$i; done)" ]]; then
-        warn "There are no Virtual Functions enabled for any QAT device"
+if [ -f /etc/init.d/qat_service ]; then
+    info "Validating Intel QuickAssist drivers installation"
+    if ! sudo /etc/init.d/qat_service status | grep "There is .* QAT acceleration device(s) in the system:" > /dev/null; then
+        error "QAT drivers and/or service weren't installed properly"
+    else
+        if [[ -z "$(for i in 0442 0443 37c9 19e3; do lspci -d 8086:$i; done)" ]]; then
+            warn "There are no Virtual Functions enabled for any QAT device"
+        fi
     fi
 fi
 

@@ -13,7 +13,7 @@ set -o errexit
 set -o pipefail
 
 msg="Summary \n"
-export PKG_VAGRANT_VERSION=2.2.9
+export PKG_VAGRANT_VERSION=2.2.10
 export PKG_VIRTUALBOX_VERSION=6.0
 export PKG_QAT_DRIVER_VERSION=1.7.l.4.6.0-00025
 qemu_version=4.1.0
