@@ -10,9 +10,9 @@
 linux:
   - alias: centos_7
     name: generic/centos7
-    version: 3.0.20
+    version: 3.0.28
   - alias: ubuntu_bionic
     name: generic/ubuntu1804
-    version: 3.0.20
+    version: 3.0.28
   - alias: opensuse
     name: opensuse/Tumbleweed.x86_64
