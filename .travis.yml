@@ -16,11 +16,21 @@ dist: bionic
 cache:
   directories:
     - /home/travis/.vagrant.d/boxes
-before_install:
-  - if [ -n "${VAGRANT_EXECUTION:-}" ]; then sudo apt update; sudo apt-get install -y -qq -o=Dpkg::Use-Pty=0 --no-install-recommends curl qemu ; fi
-  - if [ -n "${VAGRANT_EXECUTION:-}" ]; then curl -fsSL http://bit.ly/install_pkg | PKG="vagrant bridge-utils dnsmasq ebtables libvirt qemu-kvm ruby-devel gcc" bash ; fi
-  - if [ -n "${VAGRANT_EXECUTION:-}" ]; then vagrant plugin install vagrant-libvirt; fi
-  - if [ -n "${VAGRANT_EXECUTION:-}" ]; then vagrant plugin install vagrant-reload; fi
+install:
+  - sudo apt update
+  - sudo apt-get install -y -qq -o=Dpkg::Use-Pty=0 --no-install-recommends curl qemu
+  - curl -fsSL http://bit.ly/install_pkg | PKG="vagrant bridge-utils dnsmasq ebtables libvirt qemu-kvm ruby-devel gcc" bash
+  - vagrant plugin install vagrant-libvirt
+  - vagrant plugin install vagrant-reload
+script:
+  - sudo -E vagrant up $VAGRANT_NAME
+env:
+  - PROVIDER=libvirt CREATE_SRIOV_VFS=true CREATE_QAT_VFS=true VAGRANT_NAME=ubuntu_bionic_libvirt
+  - PROVIDER=virtualbox VAGRANT_NAME=ubuntu_bionic_virtualbox
+  - PROVIDER=libvirt CREATE_SRIOV_VFS=true CREATE_QAT_VFS=true VAGRANT_NAME=centos_7_libvirt
+  - PROVIDER=virtualbox VAGRANT_NAME=centos_7_virtualbox
+  - PROVIDER=libvirt VAGRANT_NAME=opensuse_libvirt
+  - PROVIDER=virtualbox VAGRANT_NAME=opensuse_virtualbox
 jobs:
   include:
     - name: Lint validation
@@ -30,36 +40,13 @@ jobs:
       script:
         - tox -e lint
         - shellcheck -x *.sh
-    - name: Validating Bare Metal installation
+    - name: Validating Libvirt Bare Metal installation
+      install:
+        - echo "Libvirt Bare Metal Validation"
       script:
         - PROVIDER=libvirt ./setup.sh
-    - name: Ubuntu 18.04 LTS validation using Libvirt provider + Create SR-IOV VFs + Create QAT VFs
+    - name: Validating VirtualBox Bare Metal installation
+      install:
+        - echo "VirtualBox Bare Metal Validation"
       script:
-        - PROVIDER=libvirt CREATE_SRIOV_VFS=true CREATE_QAT_VFS=true sudo -E vagrant up ubuntu_bionic_libvirt
-      env:
-        - VAGRANT_EXECUTION=true
-    - name: Ubuntu 18.04 LTS validation using VirtualBox provider
-      script:
-        - PROVIDER=virtualbox sudo -E vagrant up ubuntu_bionic_virtualbox
-      env:
-        - VAGRANT_EXECUTION=true
-    - name: CentOS 7 validation using Libvirt provider + Create SR-IOV VFs + Create QAT VFs
-      script:
-        - PROVIDER=libvirt CREATE_SRIOV_VFS=true CREATE_QAT_VFS=true sudo -E vagrant up centos_7_libvirt
-      env:
-        - VAGRANT_EXECUTION=true
-    - name: CentOS 7 validation using VirtualBox provider
-      script:
-        - PROVIDER=virtualbox sudo -E vagrant up centos_7_virtualbox
-      env:
-        - VAGRANT_EXECUTION=true
-    - name: openSUSE Tumbleweed validation using Libvirt provider
-      script:
-        - PROVIDER=libvirt sudo -E vagrant up opensuse_libvirt
-      env:
-        - VAGRANT_EXECUTION=true
-    - name: openSUSE Tumbleweed validation using VirtualBox provider
-      script:
-        - PROVIDER=virtualbox sudo -E vagrant up opensuse_virtualbox
-      env:
-        - VAGRANT_EXECUTION=true
+        - PROVIDER=virtualbox ./setup.sh
