@@ -14,9 +14,9 @@ set -o pipefail
 
 msg="Summary \n"
 export PKG_VAGRANT_VERSION=2.2.10
-export PKG_VIRTUALBOX_VERSION=6.0
-export PKG_QAT_DRIVER_VERSION=1.7.l.4.6.0-00025
-qemu_version=4.1.0
+export PKG_VIRTUALBOX_VERSION=6.1
+export PKG_QAT_DRIVER_VERSION=1.7.l.4.11.0-00001
+export PKG_QEMU_VERSION=5.1.0
 if [ "${DEBUG:-false}" == "true" ]; then
     set -o xtrace
     export PKG_DEBUG=true
@@ -199,13 +199,21 @@ function check_qemu {
         fi
     fi
 
-    msg+="- INFO: Installing QEMU $qemu_version\n"
+    msg+="- INFO: Installing QEMU $PKG_QEMU_VERSION version\n"
     curl -fsSL http://bit.ly/install_pkg | PKG="qemu" bash
 }
 
 function exit_trap() {
-    echo -e "$msg"
+    if [[ "${DEBUG:-false}" == "true" ]]; then
+        set +o xtrace
+    fi
+    printf "CPU usage: "
+    grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage " %"}'
+    printf "Memory free(Kb): "
+    awk -v low="$(grep low /proc/zoneinfo | awk '{k+=$2}END{print k}')" '{a[$1]=$2}  END{ print a["MemFree:"]+a["Active(file):"]+a["Inactive(file):"]+a["SReclaimable:"]-(12*low);}' /proc/meminfo
+    echo "Environment variables:"
     printenv
+    echo -e "$msg"
     exit 1
 }
 
@@ -287,5 +295,4 @@ if [ "${CREATE_QAT_VFS:-false}" == "true" ]; then
     msg+="- INFO: The Intel QuickAssist Technology drivers were installed using the $PKG_QAT_DRIVER_VERSION version\n"
 fi
 
-trap ERR
 echo -e "$msg"
