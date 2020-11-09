@@ -40,7 +40,7 @@ if ! command -v vagrant > /dev/null; then
     error "Vagrant command line wasn't installed"
 fi
 
-if [[ "$(vagrant version | awk 'NR==1{print $3}')" != "2.2.10" ]]; then
+if [[ "$(vagrant version | awk 'NR==1{print $3}')" != "2.2.13" ]]; then
     error "Vagrant command line has different version"
 fi
 
