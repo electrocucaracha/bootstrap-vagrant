@@ -55,6 +55,11 @@ elif command -v virsh > /dev/null; then
         info "QEMU doesn't support IOMMU,$(awk -F':' '{print $2}' <<< "$iommu_support")"
     fi
 
+    info "Validating QEMU image tool"
+    if ! command -v qemu-img; then
+        error "qemu-img command line tool wasn't installed"
+    fi
+
     info "Validating Nested Virtualization"
     vendor_id=$(lscpu|grep "Vendor ID")
     if [[ $vendor_id == *GenuineIntel* ]]; then

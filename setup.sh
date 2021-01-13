@@ -261,7 +261,7 @@ case ${PROVIDER} in
     libvirt)
         $INSTALLER_CMD qemu || :
         pkgs+=" bridge-utils dnsmasq ebtables libvirt"
-        pkgs+=" qemu-kvm ruby-devel gcc nfs make"
+        pkgs+=" qemu-kvm ruby-devel gcc nfs make qemu-utils"
     ;;
 esac
 if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
