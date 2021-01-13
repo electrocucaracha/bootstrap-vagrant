@@ -9,7 +9,7 @@
 ##############################################################################
 linux:
   - alias: centos_7
-    name: generic/centos7
+    name: centos/7
   - alias: ubuntu_bionic
     name: generic/ubuntu1804
   - alias: opensuse
