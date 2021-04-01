@@ -13,7 +13,7 @@ set -o errexit
 set -o pipefail
 
 msg="Summary \n"
-export PKG_VAGRANT_VERSION=2.2.13
+export PKG_VAGRANT_VERSION=2.2.15
 export PKG_VIRTUALBOX_VERSION=6.1
 export PKG_QAT_DRIVER_VERSION=1.7.l.4.11.0-00001
 export PKG_QEMU_VERSION=5.1.0
@@ -233,6 +233,10 @@ trap exit_trap ERR
 source /etc/os-release || source /usr/lib/os-release
 case ${ID,,} in
     *suse*)
+        if [ "${PROVIDER}" == "libvirt" ]; then
+             # https://github.com/hashicorp/vagrant/issues/12138
+             export PKG_VAGRANT_VERSION=2.2.13
+        fi
         CONFIGURE_ARGS="with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib64"
         export CONFIGURE_ARGS
         sudo zypper -n ref
