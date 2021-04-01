@@ -39,7 +39,6 @@ jobs:
         - pip install tox
       script:
         - tox -e lint
-        - shellcheck -x *.sh
     - name: Validating Libvirt Bare Metal installation
       install:
         - echo "Libvirt Bare Metal Validation"
