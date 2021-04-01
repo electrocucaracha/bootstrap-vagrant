@@ -237,12 +237,12 @@ case ${ID,,} in
              # https://github.com/hashicorp/vagrant/issues/12138
              export PKG_VAGRANT_VERSION=2.2.13
         fi
-        CONFIGURE_ARGS="with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib64"
-        export CONFIGURE_ARGS
+        export CONFIGURE_ARGS="with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib64"
         sudo zypper -n ref
         INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
     ;;
     ubuntu|debian)
+        export CONFIGURE_ARGS='with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib'
         echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections
         sudo apt-get update
         INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"

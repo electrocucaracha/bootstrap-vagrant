@@ -12,5 +12,7 @@ linux:
     name: centos/7
   - alias: ubuntu_bionic
     name: generic/ubuntu1804
+  - alias: ubuntu_focal
+    name: generic/ubuntu2004
   - alias: opensuse
     name: opensuse/Tumbleweed.x86_64
