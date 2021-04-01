@@ -14,7 +14,7 @@ and providers.
 | Name       | Version     |
 |:-----------|:-----------:|
 | Ubuntu     | 18.04/20.04 |
-| CentOS     | 7           |
+| CentOS     | 7/8         |
 | openSUSE   | Tumbleweed  |
 
 ## Vagrant Providers

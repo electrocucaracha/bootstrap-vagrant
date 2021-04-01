@@ -25,11 +25,13 @@ install:
 script:
   - sudo -E vagrant up $VAGRANT_NAME
 env:
-  - PROVIDER=libvirt CREATE_SRIOV_VFS=true CREATE_QAT_VFS=true VAGRANT_NAME=ubuntu_focal_libvirt
+  - CREATE_SRIOV_VFS=true CREATE_QAT_VFS=true VAGRANT_NAME=ubuntu_focal_libvirt
   - PROVIDER=virtualbox VAGRANT_NAME=ubuntu_focal_virtualbox
-  - PROVIDER=libvirt CREATE_SRIOV_VFS=true CREATE_QAT_VFS=true VAGRANT_NAME=ubuntu_bionic_libvirt
+  - CREATE_SRIOV_VFS=true CREATE_QAT_VFS=true VAGRANT_NAME=ubuntu_bionic_libvirt
   - PROVIDER=virtualbox VAGRANT_NAME=ubuntu_bionic_virtualbox
-  - PROVIDER=libvirt CREATE_SRIOV_VFS=true CREATE_QAT_VFS=true VAGRANT_NAME=centos_7_libvirt
+  - CREATE_SRIOV_VFS=true VAGRANT_NAME=centos_8_libvirt
+  - PROVIDER=virtualbox VAGRANT_NAME=centos_8_virtualbox
+  - CREATE_SRIOV_VFS=true CREATE_QAT_VFS=true VAGRANT_NAME=centos_7_libvirt
   - PROVIDER=virtualbox VAGRANT_NAME=centos_7_virtualbox
-  - PROVIDER=libvirt VAGRANT_NAME=opensuse_libvirt
+  - VAGRANT_NAME=opensuse_libvirt
   - PROVIDER=virtualbox VAGRANT_NAME=opensuse_virtualbox

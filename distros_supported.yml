@@ -10,6 +10,8 @@
 linux:
   - alias: centos_7
     name: centos/7
+  - alias: centos_8
+    name: centos/8
   - alias: ubuntu_bionic
     name: generic/ubuntu1804
   - alias: ubuntu_focal

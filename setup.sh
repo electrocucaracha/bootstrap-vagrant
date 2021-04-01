@@ -229,6 +229,7 @@ fi
 
 trap exit_trap ERR
 
+export CONFIGURE_ARGS="with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib64"
 # shellcheck disable=SC1091
 source /etc/os-release || source /usr/lib/os-release
 case ${ID,,} in
@@ -237,7 +238,6 @@ case ${ID,,} in
              # https://github.com/hashicorp/vagrant/issues/12138
              export PKG_VAGRANT_VERSION=2.2.13
         fi
-        export CONFIGURE_ARGS="with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib64"
         sudo zypper -n ref
         INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
     ;;
@@ -265,7 +265,10 @@ case ${PROVIDER} in
     libvirt)
         $INSTALLER_CMD qemu || :
         pkgs+=" bridge-utils dnsmasq ebtables libvirt"
-        pkgs+=" qemu-kvm ruby-devel gcc nfs make qemu-utils"
+        pkgs+=" qemu-kvm ruby-devel gcc nfs make"
+        if [[ "${ID,,}" != *"centos"* ]] && [[ "${VERSION_ID}" != *8* ]]; then
+            pkgs+=" qemu-utils"
+        fi
     ;;
 esac
 if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
