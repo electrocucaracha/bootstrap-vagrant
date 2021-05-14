@@ -16,7 +16,7 @@ msg="Summary \n"
 export PKG_VAGRANT_VERSION=${PKG_VAGRANT_VERSION:-2.2.16}
 export PKG_VIRTUALBOX_VERSION=6.1
 export PKG_QAT_DRIVER_VERSION=1.7.l.4.11.0-00001
-export PKG_QEMU_VERSION=5.1.0
+export PKG_QEMU_VERSION=6.0.0
 if [ "${DEBUG:-false}" == "true" ]; then
     set -o xtrace
     export PKG_DEBUG=true
