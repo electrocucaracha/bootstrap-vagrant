@@ -102,13 +102,14 @@ Vagrant.configure("2") do |config|
 
   [:virtualbox, :libvirt].each do |provider|
   config.vm.provider provider do |p|
-      p.cpus = 1
-      p.memory = 6144
+      p.cpus = ENV['CPUS'] || 1
+      p.memory = ENV['MEMORY'] || 6144
     end
   end
 
   config.vm.provider :virtualbox do |v|
     v.gui = false
+    v.customize ["modifyvm", :id, "--nictype1", "virtio", "--cableconnected1", "on"]
     v.customize ["modifyvm", :id, "--nested-hw-virt","on"]
   end
 
