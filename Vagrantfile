@@ -100,17 +100,38 @@ Vagrant.configure("2") do |config|
     SHELL
   end
 
+  host = RbConfig::CONFIG['host_os']
+  if host =~ /darwin/
+    mem = `sysctl -n hw.memsize`.to_i / 1024
+  elsif host =~ /linux/
+    mem = `grep 'MemTotal' /proc/meminfo | sed -e 's/MemTotal://' -e 's/ kB//'`.to_i
+  elsif host =~ /mswin|mingw|cygwin/
+    mem = `wmic computersystem Get TotalPhysicalMemory`.split[1].to_i / 1024
+  end
   [:virtualbox, :libvirt].each do |provider|
   config.vm.provider provider do |p|
       p.cpus = ENV['CPUS'] || 1
-      p.memory = ENV['MEMORY'] || 6144
+      p.memory = ENV['MEMORY'] || mem / 1024 / 4
     end
   end
 
   config.vm.provider :virtualbox do |v|
     v.gui = false
-    v.customize ["modifyvm", :id, "--nictype1", "virtio", "--cableconnected1", "on"]
     v.customize ["modifyvm", :id, "--nested-hw-virt","on"]
+    # it will cause the NAT gateway to accept DNS traffic and the gateway will
+    # read the query and use the host's operating system APIs to resolve it
+    v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    # https://docs.oracle.com/en/virtualization/virtualbox/6.0/user/network_performance.html
+    v.customize ["modifyvm", :id, "--nictype1", "virtio", "--cableconnected1", "on"]
+    # https://bugs.launchpad.net/cloud-images/+bug/1829625/comments/2
+    v.customize ["modifyvm", :id, "--uart1", "0x3F8", "4"]
+    v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
+    # Enable nested paging for memory management in hardware
+    v.customize ["modifyvm", :id, "--nestedpaging", "on"]
+    # Use large pages to reduce Translation Lookaside Buffers usage
+    v.customize ["modifyvm", :id, "--largepages", "on"]
+    # Use virtual processor identifiers  to accelerate context switching
+    v.customize ["modifyvm", :id, "--vtxvpid", "on"]
   end
 
   config.vm.provider :libvirt do |v|
