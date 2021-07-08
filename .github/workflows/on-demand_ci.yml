@@ -12,8 +12,14 @@ name: Check All
 # yamllint disable-line rule:truthy
 on:
   push:
-    branches:
-      - 'master'
+    paths:
+      - '**.sh'
+  pull_request:
+    paths:
+      - '**.sh'
+  pull_request_review:
+    types:
+      - submitted
 
 jobs:
   check:
