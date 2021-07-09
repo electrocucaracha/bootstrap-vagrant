@@ -27,8 +27,7 @@ Vagrant.configure("2") do |config|
   config.vm.provider :libvirt
   config.vm.provider :virtualbox
 
-  config.vm.synced_folder './', '/vagrant', type: "rsync",
-    rsync__args: ["--verbose", "--archive", "--delete", "-z"]
+  config.vm.synced_folder './', '/vagrant'
   distros["linux"].each do |distro|
     config.vm.define "#{distro['alias']}_#{$provider}" do |node|
       node.vm.box = distro["name"]
@@ -134,7 +133,8 @@ Vagrant.configure("2") do |config|
     v.customize ["modifyvm", :id, "--vtxvpid", "on"]
   end
 
-  config.vm.provider :libvirt do |v|
+  config.vm.provider :libvirt do |v, override|
+    override.vm.synced_folder "./", "/vagrant", type: "nfs"
     v.cpu_mode = 'host-passthrough'
     v.nested = true
     v.random_hostname = true
