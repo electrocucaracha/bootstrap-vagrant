@@ -286,7 +286,13 @@ if [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ] || [ -n "${NO_PROXY:-}"
 fi
 if [ "${PROVIDER}" == "libvirt" ]; then
     msg+="- INFO: Installing vagrant-libvirt plugin\n"
+    # NOTE: Use workaround https://github.com/hashicorp/vagrant/issues/12445
+    if _vercmp "${PKG_VAGRANT_VERSION}" '>=' "2.2.17"; then
+        sudo ln -s /opt/vagrant/embedded/include/ruby-3.0.0/ruby/st.h /opt/vagrant/embedded/include/ruby-3.0.0/st.h
+        export CFLAGS="-I/opt/vagrant/embedded/include/ruby-3.0.0/ruby"
+    fi
     vagrant plugin install vagrant-libvirt
+    unset CFLAGS
     check_qemu
     enable_iommu
     enable_nested_virtualization
