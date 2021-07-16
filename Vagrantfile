@@ -16,11 +16,6 @@ $provider = ENV['PROVIDER'] || "libvirt"
 $create_sriov_vfs = ENV['CREATE_SRIOV_VFS'] || "false"
 $create_qat_vfs = ENV['CREATE_QAT_VFS'] || "false"
 
-File.exists?("/usr/share/qemu/OVMF.fd") ? loader = "/usr/share/qemu/OVMF.fd" : loader = File.join(File.dirname(__FILE__), "OVMF.fd")
-if not File.exists?(loader)
-  system('curl -O https://download.clearlinux.org/image/OVMF.fd')
-end
-
 distros = YAML.load_file(File.dirname(__FILE__) + '/distros_supported.yml')
 
 Vagrant.configure("2") do |config|
@@ -35,11 +30,6 @@ Vagrant.configure("2") do |config|
         node.vm.box_version = distro["version"]
       end
       node.vm.box_check_update = false
-      if distro["alias"] == "clearlinux"
-        node.vm.provider 'libvirt' do |v|
-          v.loader = loader
-        end
-      end
     end
   end
 
@@ -69,11 +59,6 @@ Vagrant.configure("2") do |config|
         $INSTALLER_CMD kernel
         sudo grub2-set-default 0
         sudo grub2-mkconfig -o "$(sudo readlink -f /etc/grub2.cfg)"
-        ;;
-        clear-linux-os)
-        sudo mkdir -p /etc/kernel/cmdline.d
-        echo "module.sig_unenforce" | sudo tee /etc/kernel/cmdline.d/allow-unsigned-modules.conf
-        sudo clr-boot-manager update
         ;;
     esac
   SHELL
