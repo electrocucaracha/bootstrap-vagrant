@@ -46,7 +46,10 @@ fi
 
 if command -v VBoxManage > /dev/null; then
     info "VirtualBox command line was installed"
+    sudo systemctl restart vboxdrv
+    VAGRANT_DEFAULT_PROVIDER=virtualbox
 elif command -v virsh > /dev/null; then
+    VAGRANT_DEFAULT_PROVIDER=libvirt
     info "Libvirt command line was installed"
     qemu_validate=$(sudo virt-host-validate qemu || :)
     # shellcheck disable=SC2001
@@ -76,6 +79,7 @@ elif command -v virsh > /dev/null; then
 else
     error "VirtualBox/Libvirt command line wasn't installed"
 fi
+export VAGRANT_DEFAULT_PROVIDER
 
 if [ -f /etc/init.d/qat_service ]; then
     info "Validating Intel QuickAssist drivers installation"
@@ -92,9 +96,6 @@ info "Validating Vagrant operation"
 pushd "$(mktemp -d)"
 cat << EOT > vagrant_file.erb
 Vagrant.configure("2") do |config|
-  config.vm.provider :libvirt
-  config.vm.provider :virtualbox
-
   config.vm.box = "<%= box_name %>"
 
   [:virtualbox, :libvirt].each do |provider|
@@ -105,8 +106,20 @@ Vagrant.configure("2") do |config|
   end
 end
 EOT
-vagrant init centos/7 --template vagrant_file.erb
-vagrant status
+vagrant init generic/alpine313 --template vagrant_file.erb
+# shellcheck disable=SC1091
+source /etc/os-release || source /usr/lib/os-release
+if [[ "${VAGRANT_DEFAULT_PROVIDER:-virtualbox}" == "libvirt" ]] && [[ "${ID,,}" == "ubuntu" ]]; then
+    sudo -E vagrant up
+    sudo -E vagrant package
+    if [ ! -f package.box ]; then
+        error "Vagrant couldn't package the running box"
+    fi
+    sudo -E vagrant destroy -f
+else
+    vagrant status
+    warn "There are some unsolved vagrant-libvirt issues with this distro"
+fi
 popd
 
 trap ERR
