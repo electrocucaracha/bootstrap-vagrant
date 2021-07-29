@@ -27,8 +27,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name: [ubuntu_focal, ubuntu_bionic, centos_8, centos_7, opensuse]
+        name: [ubuntu_focal, ubuntu_bionic, centos_8, centos_7, opensuse_tumbleweed]
         provider: [libvirt, virtualbox]
+        include:
+          - name: opensuse_leap
+            provider: virtualbox
     steps:
       - uses: actions/checkout@v2
       - name: Cache Vagrant boxes
