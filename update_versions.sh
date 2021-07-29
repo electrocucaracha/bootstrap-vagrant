@@ -18,5 +18,3 @@ eval "$(curl -fsSL https://raw.githubusercontent.com/electrocucaracha/pkg-mgr_sc
 
 sed -i "s|PKG_VAGRANT_VERSION:-.*|PKG_VAGRANT_VERSION:-$PKG_VAGRANT_VERSION}|g" setup.sh
 sed -i "s/vagrant version.*/vagrant version | awk 'NR==1\{print \$3}')\" != \"$PKG_VAGRANT_VERSION\" \]\]; then/g" validate.sh
-
-sed -i "s|PKG_QEMU_VERSION:-.*|PKG_QEMU_VERSION:-$PKG_QEMU_VERSION}|g" setup.sh
