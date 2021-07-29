@@ -13,10 +13,10 @@ set -o errexit
 set -o pipefail
 
 msg="Summary \n"
-export PKG_VAGRANT_VERSION=${PKG_VAGRANT_VERSION:-2.2.17}
+export PKG_VAGRANT_VERSION=${PKG_VAGRANT_VERSION:-2.2.18}
 export PKG_VIRTUALBOX_VERSION=6.1
 export PKG_QAT_DRIVER_VERSION=1.7.l.4.11.0-00001
-export PKG_QEMU_VERSION=${PKG_QEMU_VERSION:-6.0.0}
+export PKG_QEMU_VERSION=${PKG_QEMU_VERSION:-6.1.0-rc1}
 if [ "${DEBUG:-false}" == "true" ]; then
     set -o xtrace
     export PKG_DEBUG=true
