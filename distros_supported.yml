@@ -16,5 +16,7 @@ linux:
     name: generic/ubuntu1804
   - alias: ubuntu_focal
     name: generic/ubuntu2004
-  - alias: opensuse
+  - alias: opensuse_tumbleweed
     name: opensuse/Tumbleweed.x86_64
+  - alias: opensuse_leap
+    name: opensuse/Leap-15.2.x86_64
