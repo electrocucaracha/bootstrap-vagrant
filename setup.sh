@@ -293,7 +293,7 @@ fi
 if [ "${PROVIDER}" == "libvirt" ]; then
     msg+="- INFO: Installing vagrant-libvirt plugin\n"
     # NOTE: Use workaround https://github.com/hashicorp/vagrant/issues/12445
-    if _vercmp "${PKG_VAGRANT_VERSION}" '>=' "2.2.17"; then
+    if _vercmp "${PKG_VAGRANT_VERSION}" '==' "2.2.17"; then
         sudo ln -s /opt/vagrant/embedded/include/ruby-3.0.0/ruby/st.h /opt/vagrant/embedded/include/ruby-3.0.0/st.h
         export CFLAGS="-I/opt/vagrant/embedded/include/ruby-3.0.0/ruby"
     fi
