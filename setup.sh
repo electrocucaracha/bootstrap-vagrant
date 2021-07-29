@@ -37,6 +37,7 @@ function _reload_grub {
     fi
 }
 
+# enable_iommu() - Enable Input-output memory management unit
 function enable_iommu {
     if ! iommu_support=$(sudo virt-host-validate qemu | grep 'Checking for device assignment IOMMU support'); then
         echo "- WARN - IOMMU support checker reported: $(awk -F':' '{print $3}' <<< "$iommu_support")"
@@ -56,6 +57,7 @@ function enable_iommu {
     msg+="- WARN: IOMMU was enabled and requires to reboot the server to take effect\n"
 }
 
+# enable_nested_virtualization() - Enables Kernel modules for nested virtualization
 function enable_nested_virtualization {
     vendor_id=$(lscpu|grep "Vendor ID")
     if [[ $vendor_id == *GenuineIntel* ]]; then
@@ -179,6 +181,7 @@ function _vercmp {
     esac
 }
 
+# check_qemu() - Verifies if the QEMU version installed by the package manager meets the requirements
 function check_qemu {
     if command -v qemu-system-x86_64; then
         qemu_version_installed=$(qemu-system-x86_64 --version | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')
@@ -229,7 +232,7 @@ fi
 
 trap exit_trap ERR
 
-export CONFIGURE_ARGS="with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib64"
+CONFIGURE_ARGS="with-libvirt-include=/usr/include/libvirt"
 # shellcheck disable=SC1091
 source /etc/os-release || source /usr/lib/os-release
 case ${ID,,} in
@@ -240,12 +243,13 @@ case ${ID,,} in
         fi
         sudo zypper -n ref
         INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
+        CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib64"
     ;;
     ubuntu|debian)
-        export CONFIGURE_ARGS='with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib'
         echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections
         sudo apt-get update
         INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"
+        CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib"
     ;;
     rhel|centos|fedora)
         PKG_MANAGER=$(command -v dnf || command -v yum)
@@ -254,8 +258,10 @@ case ${ID,,} in
             $INSTALLER_CMD epel-release
         fi
         sudo "$PKG_MANAGER" updateinfo --assumeyes
+        CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib64"
     ;;
 esac
+export CONFIGURE_ARGS
 
 pkgs="vagrant"
 case ${PROVIDER} in
@@ -265,7 +271,7 @@ case ${PROVIDER} in
     libvirt)
         $INSTALLER_CMD qemu || :
         pkgs+=" bridge-utils dnsmasq ebtables libvirt"
-        pkgs+=" qemu-kvm ruby-devel gcc nfs make"
+        pkgs+=" qemu-kvm ruby-devel gcc nfs make libguestfs"
         if [[ "${ID,,}" != *"centos"* ]] && [[ "${VERSION_ID}" != *8* ]]; then
             pkgs+=" qemu-utils"
         fi
