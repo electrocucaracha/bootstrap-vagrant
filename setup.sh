@@ -16,7 +16,6 @@ msg="Summary \n"
 export PKG_VAGRANT_VERSION=${PKG_VAGRANT_VERSION:-2.2.18}
 export PKG_VIRTUALBOX_VERSION=6.1
 export PKG_QAT_DRIVER_VERSION=1.7.l.4.11.0-00001
-export PKG_QEMU_VERSION=${PKG_QEMU_VERSION:-6.1.0-rc1}
 if [ "${DEBUG:-false}" == "true" ]; then
     set -o xtrace
     export PKG_DEBUG=true
@@ -201,9 +200,6 @@ function check_qemu {
             msg+=" version. This host server is using the ${qemu_version_installed} version.\n"
         fi
     fi
-
-    msg+="- INFO: Installing QEMU $PKG_QEMU_VERSION version\n"
-    curl -fsSL http://bit.ly/install_pkg | PKG="qemu" bash
 }
 
 function exit_trap() {

@@ -13,8 +13,8 @@ $no_proxy = ENV['NO_PROXY'] || ENV['no_proxy'] || "127.0.0.1,localhost"
   $no_proxy += ",10.0.2.#{i}"
 end
 $provider = ENV['PROVIDER'] || "libvirt"
-$create_sriov_vfs = ENV['CREATE_SRIOV_VFS'] || "false"
-$create_qat_vfs = ENV['CREATE_QAT_VFS'] || "false"
+$create_sriov_vfs = ENV['CREATE_SRIOV_VFS']
+$create_qat_vfs = ENV['CREATE_QAT_VFS']
 
 distros = YAML.load_file(File.dirname(__FILE__) + '/distros_supported.yml')
 
@@ -70,7 +70,7 @@ Vagrant.configure("2") do |config|
       'CREATE_QAT_VFS': "#{$create_qat_vfs}"
     }
     sh.inline = <<-SHELL
-      set -o xtrace
+      set -o errexit
       cd /vagrant/
       PROVIDER=#{$provider} ./setup.sh | tee  ~/setup.log
     SHELL
