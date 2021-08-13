@@ -32,24 +32,26 @@ jobs:
         include:
           - name: opensuse_leap
             provider: virtualbox
+    env:
+      PROVIDER: ${{ matrix.provider }}
+      VAGRANT_NAME: ${{ matrix.name }}_${{ matrix.provider }}
     steps:
       - uses: actions/checkout@v2
-      - name: Cache Vagrant boxes
-        uses: actions/cache@v2
+      - uses: actions/cache@v2
         with:
           path: ~/.vagrant.d/boxes
-          key: ${{ runner.os }}-vagrant-${{ hashFiles('distros_supported.yml') }}
+          key: ${{ runner.os }}-vagrant-${{ matrix.name }}-${{ hashFiles('distros_supported.yml') }}
           restore-keys: |
-            ${{ runner.os }}-vagrant-
+            ${{ runner.os }}-vagrant-${{ matrix.name }}-
       - name: Install Vagrant Reload plugin
         run: vagrant plugin install vagrant-reload
       - name: Replace shorten links
         run: find . -type f -iname "*sh" -exec sed -i '.bak' 's|http://bit.ly/install_pkg|https://raw.githubusercontent.com/electrocucaracha/pkg-mgr_scripts/master/install.sh|g' {} \;
       - name: Deploy instance
         env:
-          PROVIDER: ${{ matrix.provider }}
-          VAGRANT_NAME: ${{ matrix.name }}_${{ matrix.provider }}
           VAGRANT_DISABLE_VBOXSYMLINKCREATE: 1
-          CPUS: 2
+          CPUS: 3
           MEMORY: 12288
         run: vagrant up "$VAGRANT_NAME"
+      - name: Clenup instance
+        run: vagrant destroy -f "$VAGRANT_NAME"
