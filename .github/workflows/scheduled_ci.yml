@@ -41,7 +41,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.vagrant.d/boxes
-          key: ${{ runner.os }}-vagrant-${{ hashFiles('Vagrantfile') }}
+          key: ${{ runner.os }}-vagrant-${{ hashFiles('distros_supported.yml') }}
           restore-keys: |
             ${{ runner.os }}-vagrant-
       - name: Install Vagrant Reload plugin
@@ -56,4 +56,4 @@ jobs:
           MEMORY: 12288
           CREATE_SRIOV_VFS: true
           CREATE_QAT_VFS: ${{ matrix.qat }}
-        run: vagrant up $VAGRANT_NAME
+        run: vagrant up "$VAGRANT_NAME"

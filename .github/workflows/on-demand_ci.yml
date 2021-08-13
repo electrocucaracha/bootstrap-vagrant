@@ -38,7 +38,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.vagrant.d/boxes
-          key: ${{ runner.os }}-vagrant-${{ hashFiles('Vagrantfile') }}
+          key: ${{ runner.os }}-vagrant-${{ hashFiles('distros_supported.yml') }}
           restore-keys: |
             ${{ runner.os }}-vagrant-
       - name: Install Vagrant Reload plugin
@@ -52,4 +52,4 @@ jobs:
           VAGRANT_DISABLE_VBOXSYMLINKCREATE: 1
           CPUS: 2
           MEMORY: 12288
-        run: vagrant up $VAGRANT_NAME
+        run: vagrant up "$VAGRANT_NAME"
