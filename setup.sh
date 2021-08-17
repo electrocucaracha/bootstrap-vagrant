@@ -48,8 +48,8 @@ function enable_iommu {
         mkdir -p /etc/kernel/cmdline.d
         echo "intel_iommu=on" | sudo tee /etc/kernel/cmdline.d/enable-iommu.conf
     else
-        if [ -f /etc/default/grub ]  && [[ "$(grep GRUB_CMDLINE_LINUX /etc/default/grub)" != *intel_iommu=on* ]]; then
-            sudo sed -i "s|^GRUB_CMDLINE_LINUX\(.*\)\"|GRUB_CMDLINE_LINUX\1 intel_iommu=on\"|g" /etc/default/grub
+        if [ -f /etc/default/grub ]  && [[ "$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub)" != *intel_iommu=on* ]]; then
+            sudo sed -i "s|^GRUB_CMDLINE_LINUX=\(.*\)\"|GRUB_CMDLINE_LINUX=\1 intel_iommu=on\"|g" /etc/default/grub
         fi
     fi
     _reload_grub
