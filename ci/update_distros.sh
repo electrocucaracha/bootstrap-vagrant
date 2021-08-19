@@ -61,7 +61,7 @@ function _vagrant_pull {
     cat << EOT >> .distros_supported.yml
   - alias: $alias
     name: $name
-    version: $version
+    version: "$version"
 EOT
 }
 

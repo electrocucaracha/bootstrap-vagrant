@@ -10,19 +10,19 @@
 linux:
   - alias: centos_7
     name: centos/7
-    version: 2004.01
+    version: "2004.01"
   - alias: centos_8
     name: centos/8
-    version: 2011.0
+    version: "2011.0"
   - alias: ubuntu_bionic
     name: generic/ubuntu1804
-    version: 3.2.20
+    version: "3.3.4"
   - alias: ubuntu_focal
     name: generic/ubuntu2004
-    version: 3.2.20
+    version: "3.2.20"
   - alias: opensuse_tumbleweed
     name: opensuse/Tumbleweed.x86_64
-    version: 1.0.20210810
+    version: "1.0.20210817"
   - alias: opensuse_leap
     name: opensuse/Leap-15.2.x86_64
-    version: 15.2.31.524
+    version: "15.2.31.527"

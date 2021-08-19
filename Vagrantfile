@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
     config.vm.define "#{distro['alias']}_#{$provider}" do |node|
       node.vm.box = distro["name"]
       if distro.has_key? "version"
-        node.vm.box_version = distro["version"]
+        node.vm.box_version = "#{distro['version']}"
       end
       node.vm.box_check_update = false
     end
