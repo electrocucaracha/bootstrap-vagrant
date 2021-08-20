@@ -13,7 +13,7 @@ set -o errexit
 set -o pipefail
 
 msg="Summary \n"
-export PKG_VAGRANT_VERSION=${PKG_VAGRANT_VERSION:-2.2.18}
+export PKG_VAGRANT_VERSION=${PKG_VAGRANT_VERSION:-}
 export PKG_VIRTUALBOX_VERSION=6.1
 export PKG_QAT_DRIVER_VERSION=1.7.l.4.11.0-00001
 if [ "${DEBUG:-false}" == "true" ]; then
