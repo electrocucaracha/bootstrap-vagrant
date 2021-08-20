@@ -3,12 +3,11 @@
 [![GitHub Super-Linter](https://github.com/electrocucaracha/bootstrap-vagrant/workflows/Lint%20Code%20Base/badge.svg)](https://github.com/marketplace/actions/super-linter)
 ![visitors](https://visitor-badge.glitch.me/badge?page_id=electrocucaracha.bootstrap-vagrant)
 
-This project was created to ensure that [setup.sh](setup.sh)
-bash script is able to install [Vagrant tool][1] in different Linux
-Distributions. It covers the installation of its dependencies, plugins
-and providers.
+This project was created to ensure that [setup.sh](setup.sh) bash script is able
+to install [Vagrant tool][1] in different Linux Distributions. It covers the
+installation of its dependencies, plugins and providers.
 
-## Linux Distros
+## Linux Distros supported
 
 | Name       | Version         |
 |:-----------|:---------------:|
@@ -16,14 +15,14 @@ and providers.
 | CentOS     | 7/8             |
 | openSUSE   | Tumbleweed/Leap |
 
-## Vagrant Providers
+## Vagrant Providers supported
 
 | Name       | Version |
 |:-----------|:-------:|
 | VirtualBox | 6.1     |
 | Libvirt    |         |
 
-## Vagrant Plugins
+## Vagrant Plugins installed
 
 * vagrant-proxyconf
 * vagrant-libvirt
@@ -31,13 +30,10 @@ and providers.
 
 ## How use this script?
 
-The [setup.sh](setup.sh) bash script has been designed to be consumed
-remotely and executed multiple times.
+The [setup.sh](setup.sh) bash script has been designed to be consumed remotely
+and executed multiple times.
 
     curl -fsSL http://bit.ly/initVagrant | PROVIDER=libvirt bash
-
-After the execution of the script, the *~/boostrap-vagrant.log* file
-is created to summarize the actions that were taken.
 
 ### Environment variables
 
