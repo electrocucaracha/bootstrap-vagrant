@@ -14,7 +14,7 @@ if [[ "${DEBUG:-false}" == "true" ]]; then
     set -o xtrace
 fi
 
-eval "$(curl -fsSL https://raw.githubusercontent.com/electrocucaracha/pkg-mgr_scripts/master/pinned_versions.env)"
+eval "$(curl -fsSL https://raw.githubusercontent.com/electrocucaracha/pkg-mgr_scripts/master/ci/pinned_versions.env)"
 
 sed -i "s|PKG_VAGRANT_VERSION:-.*|PKG_VAGRANT_VERSION:-$PKG_VAGRANT_VERSION}|g" setup.sh
 sed -i "s/vagrant version.*/vagrant version | awk 'NR==1\{print \$3}')\" != \"$PKG_VAGRANT_VERSION\" \]\]; then/g" validate.sh
