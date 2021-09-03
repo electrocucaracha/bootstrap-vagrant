@@ -41,7 +41,7 @@ function enable_iommu {
     if ! iommu_support=$(sudo virt-host-validate qemu | grep 'Checking for device assignment IOMMU support'); then
         echo "- WARN - IOMMU support checker reported: $(awk -F':' '{print $3}' <<< "$iommu_support")"
     fi
-    if sudo virt-host-validate qemu | grep 'Checking if IOMMU is enabled by kernel'; then
+    if sudo virt-host-validate qemu | grep -q 'Checking if IOMMU is enabled by kernel'; then
         return
     fi
     if [[ "${ID,,}" == *clear-linux-os* ]]; then
@@ -193,7 +193,6 @@ function check_qemu {
                 sudo sed -i "s|  /{dev,run}/shm .*|  /{dev,run}/shm rw,|"  /etc/apparmor.d/abstractions/libvirt-qemu
             fi
             sudo systemctl restart libvirtd
-            return
         else
             # NOTE: PMEM in QEMU (https://nvdimm.wiki.kernel.org/pmem_in_qemu)
             msg+="- WARN: PMEM support in QEMU is available since 2.6.0"
