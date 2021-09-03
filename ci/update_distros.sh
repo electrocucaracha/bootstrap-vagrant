@@ -18,10 +18,10 @@ PROVIDER=${PROVIDER:-virtualbox}
 msg=""
 
 function _get_box_version {
-    version=""
-    attempt_counter=0
-    max_attempts=5
-    name="$1"
+    local version=""
+    local attempt_counter=0
+    readonly max_attempts=5
+    readonly name="$1"
 
     if [ -f ./ci/pinned_vagrant_boxes.txt ] && grep -q "^${name} .*$PROVIDER" ./ci/pinned_vagrant_boxes.txt; then
         version=$(grep "^${name} .*$PROVIDER" ./ci/pinned_vagrant_boxes.txt | awk '{ print $2 }')
@@ -80,6 +80,7 @@ cat << EOT > .distros_supported.yml
 # which accompanies this distribution, and is available at
 # http://www.apache.org/licenses/LICENSE-2.0
 ##############################################################################
+
 linux:
 EOT
 

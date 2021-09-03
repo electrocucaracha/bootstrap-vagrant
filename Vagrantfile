@@ -26,9 +26,7 @@ Vagrant.configure("2") do |config|
   distros["linux"].each do |distro|
     config.vm.define "#{distro['alias']}_#{$provider}" do |node|
       node.vm.box = distro["name"]
-      if distro.has_key? "version"
-        node.vm.box_version = "#{distro['version']}"
-      end
+      node.vm.box_version = "#{distro['version']}"
       node.vm.box_check_update = false
     end
   end
@@ -63,6 +61,7 @@ Vagrant.configure("2") do |config|
     esac
   SHELL
   config.vm.provision :reload
+  # Provision server
   config.vm.provision 'shell', privileged: false do |sh|
     sh.env = {
       'DEBUG': "true",
