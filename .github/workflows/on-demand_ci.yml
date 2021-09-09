@@ -13,17 +13,25 @@ name: Check All
 on:
   push:
     paths:
-      - '**.sh'
-  pull_request:
-    paths:
+      - distros_supported.yml
       - '**.sh'
   pull_request_review:
     types:
       - submitted
+    paths:
+      - distros_supported.yml
+      - '**.sh'
+  workflow_dispatch:
 
 jobs:
   check:
     runs-on: macos-10.15
+    if: >-
+      (
+        github.event_name == 'pull_request_review' &&
+        github.event.review.state == 'approved'
+      ) ||
+      github.event_name != 'pull_request_review'
     strategy:
       fail-fast: false
       matrix:
@@ -66,6 +74,12 @@ jobs:
         run: vagrant up "$VAGRANT_NAME"
   check-opensuse-leap:
     runs-on: macos-10.15
+    if: >-
+      (
+        github.event_name == 'pull_request_review' &&
+        github.event.review.state == 'approved'
+      ) ||
+      github.event_name != 'pull_request_review'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
