@@ -24,7 +24,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  check:
+  check-setup:
+    name: Check setup script on different distros using libvirt and/or virtualbox providers
     runs-on: macos-10.15
     if: >-
       (
@@ -36,6 +37,10 @@ jobs:
       fail-fast: false
       matrix:
         name: [ubuntu_focal, ubuntu_bionic, centos_8, centos_7, opensuse_tumbleweed]
+        provider: [all]
+        include:
+          - name: opensuse_leap
+            provider: virtualbox
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
@@ -54,6 +59,7 @@ jobs:
       - name: Replace shorten links
         run: find . -type f -iname "*sh" -exec sed -i '.bak' 's|http://bit.ly/install_pkg|https://raw.githubusercontent.com/electrocucaracha/pkg-mgr_scripts/master/install.sh|g' {} \;
       - name: Check Libvirt Provider
+        if: matrix.provider == 'libvirt' || matrix.provider == 'all'
         env:
           VAGRANT_DISABLE_VBOXSYMLINKCREATE: 1
           CPUS: 3
@@ -62,11 +68,15 @@ jobs:
           VAGRANT_NAME: ${{ matrix.name }}_libvirt
         run: vagrant up "$VAGRANT_NAME"
       - name: Clenup instance
+        if: matrix.provider == 'libvirt' || matrix.provider == 'all'
         env:
           PROVIDER: libvirt
           VAGRANT_NAME: ${{ matrix.name }}_libvirt
-        run: vagrant destroy -f "$VAGRANT_NAME"
+        run: |
+          vagrant halt "$VAGRANT_NAME"
+          vagrant destroy -f "$VAGRANT_NAME"
       - name: Check VirtualBox Provider
+        if: matrix.provider == 'virtualbox' || matrix.provider == 'all'
         env:
           VAGRANT_DISABLE_VBOXSYMLINKCREATE: 1
           CPUS: 3
@@ -74,35 +84,3 @@ jobs:
           PROVIDER: virtualbox
           VAGRANT_NAME: ${{ matrix.name }}_virtualbox
         run: vagrant up "$VAGRANT_NAME"
-  check-opensuse-leap:
-    runs-on: macos-10.15
-    if: >-
-      (
-        github.event_name == 'pull_request_review' &&
-        github.event.review.state == 'approved'
-      ) ||
-      github.event_name != 'pull_request_review'
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        with:
-          path: ~/.vagrant.d/boxes
-          key: ${{ runner.os }}-vagrant-opensuse_leap-${{ hashFiles('distros_supported.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-vagrant-opensuse_leap-
-      # TODO: Remove this once https://www.virtualbox.org/ticket/20636 is released
-      - name: Apply workaround for VBoxHeadless in macOS
-        run: |
-          find . -type f -iname "Vagrantfile" -exec sed -i '.bak' 's|v.gui = .*|v.gui = true|g' {} \;
-          find . -type f -name "*.bak" -delete
-      - name: Install Vagrant Reload plugin
-        run: vagrant plugin install vagrant-reload
-      - name: Replace shorten links
-        run: find . -type f -iname "*sh" -exec sed -i '.bak' 's|http://bit.ly/install_pkg|https://raw.githubusercontent.com/electrocucaracha/pkg-mgr_scripts/master/install.sh|g' {} \;
-      - name: Check VirtualBox Provider
-        env:
-          VAGRANT_DISABLE_VBOXSYMLINKCREATE: 1
-          CPUS: 3
-          MEMORY: 12288
-          PROVIDER: virtualbox
-        run: vagrant up opensuse_leap_virtualbox
