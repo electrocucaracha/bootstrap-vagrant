@@ -106,11 +106,12 @@ Vagrant.configure("2") do |config|
   end
 end
 EOT
-vagrant init generic/alpine313 --box-version 3.4.2 --template vagrant_file.erb
+vagrant init generic/alpine313 --box-version 3.5.0 --template vagrant_file.erb
 # shellcheck disable=SC1091
 source /etc/os-release || source /usr/lib/os-release
-if [[ "${VAGRANT_DEFAULT_PROVIDER:-virtualbox}" == "libvirt" && "${ID,,}" == "ubuntu" ]]; then
+if [[ "${ID,,}" == "ubuntu" ]]; then
     sudo -E vagrant up
+    sudo -E vagrant halt
     sudo -E vagrant package
     if [ ! -f package.box ]; then
         error "Vagrant couldn't package the running box"
