@@ -1,5 +1,5 @@
 CentOS
-distros
+Distros
 electrocucaracha
 fsSL
 href
@@ -7,7 +7,7 @@ https
 img
 initVagrant
 IOV
-Libvirt
+libvirt
 linter
 ly
 opensource

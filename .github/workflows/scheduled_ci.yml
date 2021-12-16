@@ -8,7 +8,7 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 ##############################################################################
 
-name: Check VFS installation
+name: Scheduled VFS install verification
 # yamllint disable-line rule:truthy
 on:
   schedule:

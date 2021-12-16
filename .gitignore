@@ -3,4 +3,4 @@
 *.log
 OVMF.fd
 *swp
-dictionary.dic
+*.dic
