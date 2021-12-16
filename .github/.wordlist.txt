@@ -7,8 +7,8 @@ https
 img
 initVagrant
 IOV
-libvirt
-linter
+Libvirt
+Linter
 ly
 opensource
 openSUSE
