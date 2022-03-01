@@ -85,7 +85,7 @@ linux:
 EOT
 
 _vagrant_pull "centos_7" "centos/7"
-_vagrant_pull "centos_8" "centos/8"
+_vagrant_pull "centos_8" "centos/stream8"
 _vagrant_pull "ubuntu_bionic" "generic/ubuntu1804"
 _vagrant_pull "ubuntu_focal" "generic/ubuntu2004"
 _vagrant_pull "opensuse_tumbleweed" "opensuse/Tumbleweed.x86_64"
