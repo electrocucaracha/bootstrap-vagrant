@@ -27,7 +27,7 @@ jobs:
           CREATE_QAT_VFS: true
         run: ./setup.sh
   check-vagrant:
-    runs-on: macos-10.15
+    runs-on: macos-12
     strategy:
       fail-fast: false
       matrix:
@@ -52,6 +52,8 @@ jobs:
               find . -type f -iname "Vagrantfile" -exec sed -i '.bak' 's|v.gui = .*|v.gui = true|g' {} \;
               find . -type f -name "*.bak" -delete
           fi
+      - name: Install vagrant tool
+        run: brew install vagrant
       - name: Install Vagrant Reload plugin
         run: vagrant plugin install vagrant-reload
       - name: Replace shorten links
