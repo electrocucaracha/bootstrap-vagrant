@@ -18,9 +18,6 @@ on:
   pull_request_review:
     types:
       - submitted
-    paths:
-      - distros_supported.yml
-      - '**.sh'
   workflow_dispatch:
 
 jobs:
