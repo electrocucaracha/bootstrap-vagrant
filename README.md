@@ -44,4 +44,17 @@ and executed multiple times.
 | CREATE_SRIOV_VFS       | false   | Creates SR-IOV Virtual Functions                    |
 | CREATE_QAT_VFS         | false   | Creates QuickAssit Virtual Functions                |
 
+## Contribution
+
+This is an open project, several individuals contribute in different forms like
+coding, documenting, testing, spreading the word at events within others.
+
+Thanks to all the people who already contributed!
+
+<a href="https://github.com/electrocucaracha/bootstrap-vagrant/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=electrocucaracha/bootstrap-vagrant" />
+</a>
+
+![Visualization of the codebase](./codebase-structure.svg)
+
 [1]: https://www.vagrantup.com/
