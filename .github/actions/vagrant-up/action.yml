@@ -1,0 +1,45 @@
+---
+# SPDX-license-identifier: Apache-2.0
+##############################################################################
+# Copyright (c) 2022
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Apache License, Version 2.0
+# which accompanies this distribution, and is available at
+# http://www.apache.org/licenses/LICENSE-2.0
+##############################################################################
+
+name: Vagrant up
+inputs:
+  memory:
+    description: 'Memory'
+    default: 12288
+  cpu:
+    description: 'CPU'
+    default: 3
+  provider:
+    description: 'Vagrant provider'
+    default: libvirt
+  os:
+    description: 'Linux distribution'
+    default: ubuntu_focal
+  enable_sriov_vfs:
+    description: 'Enable SR-IOV Virtual Functions'
+    default: false
+  enable_qat_vfs:
+    description: 'Enable QuickAssist Virtual Functions'
+    default: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run vagrant box instance
+      shell: bash
+      env:
+        VAGRANT_DISABLE_VBOXSYMLINKCREATE: 1
+        MEMORY: ${{ inputs.memory }}
+        CPUS: ${{ inputs.cpu }}
+        PROVIDER: ${{ inputs.provider }}
+        VAGRANT_NAME: ${{ inputs.os }}_${{ inputs.provider }}
+        CREATE_SRIOV_VFS: ${{ inputs.enable_sriov_vfs }}
+        CREATE_QAT_VFS: ${{ inputs.enable_qat_vfs }}
+      run: vagrant up "$VAGRANT_NAME"
