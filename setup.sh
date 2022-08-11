@@ -1,7 +1,7 @@
 #!/bin/bash
 # SPDX-license-identifier: Apache-2.0
 ##############################################################################
-# Copyright (c) 2019
+# Copyright (c) 2019,2022
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Apache License, Version 2.0
 # which accompanies this distribution, and is available at
@@ -36,8 +36,7 @@ function _reload_grub {
     fi
 }
 
-# enable_iommu() - Enable Input-output memory management unit
-function enable_iommu {
+function _enable_iommu {
     if ! iommu_support=$(sudo virt-host-validate qemu | grep 'Checking for device assignment IOMMU support'); then
         echo "- WARN - IOMMU support checker reported: $(awk -F':' '{print $3}' <<< "$iommu_support")"
     fi
@@ -56,8 +55,7 @@ function enable_iommu {
     msg+="- WARN: IOMMU was enabled and requires to reboot the server to take effect\n"
 }
 
-# enable_nested_virtualization() - Enables Kernel modules for nested virtualization
-function enable_nested_virtualization {
+function _enable_nested_virtualization {
     vendor_id=$(lscpu|grep "Vendor ID")
     if [[ $vendor_id == *GenuineIntel* ]]; then
         if [ -f /sys/module/kvm_intel/parameters/nested ]; then
@@ -111,8 +109,7 @@ EOL'
     sudo systemctl --now enable rc-local
 }
 
-# create_sriov_vfs() - Function that creates Virtual Functions for Single Root I/O Virtualization (SR-IOV)
-function create_sriov_vfs {
+function _create_sriov_vfs {
     _enable_rc_local
     for nic in $(sudo lshw -C network -short | grep Connection | awk '{ print $2 }'); do
         if [ -e "/sys/class/net/$nic/device/sriov_numvfs" ]  && grep -e up "/sys/class/net/$nic/operstate" > /dev/null ; then
@@ -127,8 +124,7 @@ function create_sriov_vfs {
     done
 }
 
-# create_qat_vfs() - Function that install Intel QuickAssist Technology drivers and enabled its Virtual Functions
-function create_qat_vfs {
+function _create_qat_vfs {
     _enable_rc_local
 
     for qat_dev in $(for i in 0434 0435 37c8 6f54 19e2; do lspci -d 8086:$i -m; done|awk '{print $1}'); do
@@ -142,7 +138,6 @@ function create_qat_vfs {
     done
 }
 
-# _vercmp() - Function that compares two versions
 function _vercmp {
     local v1=$1
     local op=$2
@@ -175,13 +170,13 @@ function _vercmp {
             return
             ;;
         *)
-            die $LINENO "unrecognised op: $op"
+            echo "unrecognised op: $op"
+            exit 1
             ;;
     esac
 }
 
-# check_qemu() - Verifies if the QEMU version installed by the package manager meets the requirements
-function check_qemu {
+function _check_qemu {
     if command -v qemu-system-x86_64; then
         qemu_version_installed=$(qemu-system-x86_64 --version | perl -pe '($_)=/([0-9]+([.][0-9]+)+)/')
         if _vercmp "${qemu_version_installed}" '>' "2.6.0"; then
@@ -201,7 +196,7 @@ function check_qemu {
     fi
 }
 
-function exit_trap() {
+function _exit_trap() {
     if [[ "${DEBUG:-false}" == "true" ]]; then
         set +o xtrace
     fi
@@ -211,102 +206,119 @@ function exit_trap() {
     awk -v low="$(grep low /proc/zoneinfo | awk '{k+=$2}END{print k}')" '{a[$1]=$2}  END{ print a["MemFree:"]+a["Active(file):"]+a["Inactive(file):"]+a["SReclaimable:"]-(12*low);}' /proc/meminfo
     echo "Environment variables:"
     printenv
-    echo -e "$msg"
-    exit 1
 }
 
-if ! sudo -n "true"; then
-    echo ""
-    echo "passwordless sudo is needed for '$(id -nu)' user."
-    echo "Please fix your /etc/sudoers file. You likely want an"
-    echo "entry like the following one..."
-    echo ""
-    echo "$(id -nu) ALL=(ALL) NOPASSWD: ALL"
-    exit 1
-fi
-
-trap exit_trap ERR
-
-CONFIGURE_ARGS="with-libvirt-include=/usr/include/libvirt"
-# shellcheck disable=SC1091
-source /etc/os-release || source /usr/lib/os-release
-case ${ID,,} in
-    *suse*)
-        if [ "${PROVIDER}" == "libvirt" ]; then
-             # https://github.com/hashicorp/vagrant/issues/12138
-             export PKG_VAGRANT_VERSION=2.2.13
-        fi
-        sudo zypper -n ref
-        INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
-        CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib64"
-    ;;
-    ubuntu|debian)
-        echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections
-        sudo apt-get update
-        INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"
-        CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib"
-    ;;
-    rhel|centos|fedora)
-        PKG_MANAGER=$(command -v dnf || command -v yum)
-        INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install"
-        if ! sudo "$PKG_MANAGER" repolist | grep "epel/"; then
-            $INSTALLER_CMD epel-release
-        fi
-        sudo "$PKG_MANAGER" updateinfo --assumeyes
-        CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib64"
-    ;;
-esac
-export CONFIGURE_ARGS
-
-pkgs="vagrant"
-case ${PROVIDER} in
-    virtualbox)
-        pkgs+=" virtualbox"
-    ;;
-    libvirt)
-        $INSTALLER_CMD qemu || :
-        pkgs+=" bridge-utils dnsmasq ebtables libvirt"
-        pkgs+=" qemu-kvm ruby-devel gcc nfs make libguestfs"
-        if [[ "${ID,,}" != *"centos"* ]] && [[ "${VERSION_ID}" != *8* ]]; then
-            pkgs+=" qemu-utils"
-        fi
-    ;;
-esac
-if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
-    pkgs+=" sysfsutils lshw"
-fi
-if [ "${CREATE_QAT_VFS:-false}" == "true" ]; then
-    pkgs+=" qat-driver"
-fi
-
-curl -fsSL http://bit.ly/install_pkg | PKG="$pkgs" PKG_UPDATE=true bash
-msg+="- INFO: Installing vagrant $PKG_VAGRANT_VERSION\n"
-
-if [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ] || [ -n "${NO_PROXY:-}" ]; then
-    vagrant plugin install vagrant-proxyconf
-fi
-if [ "${PROVIDER}" == "libvirt" ]; then
-    msg+="- INFO: Installing vagrant-libvirt plugin\n"
-    # NOTE: Use workaround https://github.com/hashicorp/vagrant/issues/12445
-    if _vercmp "${PKG_VAGRANT_VERSION}" '==' "2.2.17"; then
-        sudo ln -s /opt/vagrant/embedded/include/ruby-3.0.0/ruby/st.h /opt/vagrant/embedded/include/ruby-3.0.0/st.h
-        export CFLAGS="-I/opt/vagrant/embedded/include/ruby-3.0.0/ruby"
+function _check_reqs {
+    if ! sudo -n "true"; then
+        echo ""
+        echo "passwordless sudo is needed for '$(id -nu)' user."
+        echo "Please fix your /etc/sudoers file. You likely want an"
+        echo "entry like the following one..."
+        echo ""
+        echo "$(id -nu) ALL=(ALL) NOPASSWD: ALL"
+        exit 1
     fi
-    vagrant plugin install vagrant-libvirt
-    unset CFLAGS
-    check_qemu
-    enable_iommu
-    enable_nested_virtualization
-fi
-vagrant plugin install vagrant-reload
+}
 
-if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
-    create_sriov_vfs
-    msg+="- INFO: SR-IOV Virtual Functions were created\n"
-fi
-if [ "${CREATE_QAT_VFS:-false}" == "true" ]; then
-    create_qat_vfs
-    msg+="- INFO: The Intel QuickAssist Technology drivers were installed using the $PKG_QAT_DRIVER_VERSION version\n"
-fi
+function _install_deps {
+    CONFIGURE_ARGS="with-libvirt-include=/usr/include/libvirt"
+    # shellcheck disable=SC1091
+    source /etc/os-release || source /usr/lib/os-release
+    case ${ID,,} in
+        *suse*)
+            if [ "${PROVIDER}" == "libvirt" ]; then
+                 # https://github.com/hashicorp/vagrant/issues/12138
+                 export PKG_VAGRANT_VERSION=2.2.13
+            fi
+            sudo zypper -n ref
+            INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
+            CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib64"
+        ;;
+        ubuntu|debian)
+            echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections
+            sudo apt-get update
+            INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"
+            CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib"
+        ;;
+        rhel|centos|fedora)
+            PKG_MANAGER=$(command -v dnf || command -v yum)
+            INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install"
+            if ! sudo "$PKG_MANAGER" repolist | grep "epel/"; then
+                $INSTALLER_CMD epel-release
+            fi
+            sudo "$PKG_MANAGER" updateinfo --assumeyes
+            CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib64"
+        ;;
+    esac
+    export CONFIGURE_ARGS
 
-echo -e "$msg"
+    pkgs="vagrant"
+    case ${PROVIDER} in
+        virtualbox)
+            pkgs+=" virtualbox"
+        ;;
+        libvirt)
+            $INSTALLER_CMD qemu || :
+            pkgs+=" bridge-utils dnsmasq ebtables libvirt"
+            pkgs+=" qemu-kvm ruby-devel gcc nfs make libguestfs"
+            if [[ "${ID,,}" != *"centos"* ]] && [[ "${VERSION_ID}" != *8* ]]; then
+                pkgs+=" qemu-utils"
+            fi
+        ;;
+    esac
+    if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
+        pkgs+=" sysfsutils lshw"
+    fi
+    if [ "${CREATE_QAT_VFS:-false}" == "true" ]; then
+        pkgs+=" qat-driver"
+    fi
+
+    curl -fsSL http://bit.ly/install_pkg | PKG="$pkgs" PKG_UPDATE=true bash
+    msg+="- INFO: Installing vagrant $PKG_VAGRANT_VERSION\n"
+}
+
+function _install_plugins {
+    if [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ] || [ -n "${NO_PROXY:-}" ]; then
+        vagrant plugin install vagrant-proxyconf
+    fi
+    if [ "${PROVIDER}" == "libvirt" ]; then
+        msg+="- INFO: Installing vagrant-libvirt plugin\n"
+        # NOTE: Use workaround https://github.com/hashicorp/vagrant/issues/12445
+        if _vercmp "${PKG_VAGRANT_VERSION}" '==' "2.2.17"; then
+            sudo ln -s /opt/vagrant/embedded/include/ruby-3.0.0/ruby/st.h /opt/vagrant/embedded/include/ruby-3.0.0/st.h
+            export CFLAGS="-I/opt/vagrant/embedded/include/ruby-3.0.0/ruby"
+        fi
+        vagrant plugin install vagrant-libvirt
+        unset CFLAGS
+        _check_qemu
+        _enable_iommu
+        _enable_nested_virtualization
+    fi
+    vagrant plugin install vagrant-reload
+}
+
+function _configure_addons {
+    if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
+        _create_sriov_vfs
+        msg+="- INFO: SR-IOV Virtual Functions were created\n"
+    fi
+    if [ "${CREATE_QAT_VFS:-false}" == "true" ]; then
+        _create_qat_vfs
+        msg+="- INFO: The Intel QuickAssist Technology drivers were installed using the $PKG_QAT_DRIVER_VERSION version\n"
+    fi
+}
+
+function main {
+    _check_reqs
+
+    trap _exit_trap ERR
+    trap 'echo -e $msg' EXIT
+
+    _install_deps
+    _install_plugins
+    _configure_addons
+}
+
+if [[ "${__name__:-"__main__"}" == "__main__" ]]; then
+    main
+fi
