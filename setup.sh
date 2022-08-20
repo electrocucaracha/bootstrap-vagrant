@@ -36,6 +36,13 @@ function _reload_grub {
     fi
 }
 
+function _enable_dnssec {
+    if [ -f /etc/dnsmasq.d/libvirt-daemon ] && ! grep -q "^dnssec$" /etc/dnsmasq.d/libvirt-daemon ; then
+         msg+="- INFO: DNSSEC was enabled in dnsmasq service\n"
+         echo dnssec | sudo tee --append /etc/dnsmasq.d/libvirt-daemon
+    fi
+}
+
 function _enable_iommu {
     if ! iommu_support=$(sudo virt-host-validate qemu | grep 'Checking for device assignment IOMMU support'); then
         echo "- WARN - IOMMU support checker reported: $(awk -F':' '{print $3}' <<< "$iommu_support")"
@@ -292,6 +299,7 @@ function _install_plugins {
         unset CFLAGS
         _check_qemu
         _enable_iommu
+        _enable_dnssec
         _enable_nested_virtualization
     fi
     vagrant plugin install vagrant-reload
