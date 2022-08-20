@@ -106,7 +106,7 @@ Vagrant.configure("2") do |config|
   end
 end
 EOT
-vagrant init generic/alpine313 --box-version 3.5.0 --template vagrant_file.erb
+vagrant init generic/alpine316 --box-version 3.5.0 --template vagrant_file.erb
 # shellcheck disable=SC1091
 source /etc/os-release || source /usr/lib/os-release
 if [[ "${ID,,}" == "ubuntu" ]]; then
