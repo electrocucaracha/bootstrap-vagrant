@@ -92,7 +92,7 @@ Vagrant.configure("2") do |config|
     mem = `wmic computersystem Get TotalPhysicalMemory`.split[1].to_i / 1024
   end
   [:virtualbox, :libvirt].each do |provider|
-  config.vm.provider provider do |p|
+    config.vm.provider provider do |p|
       p.cpus = ENV['CPUS'] || 1
       p.memory = ENV['MEMORY'] || mem / 1024 / 4
     end
@@ -100,7 +100,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider :virtualbox do |v|
     v.gui = false
-    v.customize ["modifyvm", :id, "--nested-hw-virt","on"]
+    v.customize ["modifyvm", :id, "--nested-hw-virt", "on"]
     # it will cause the NAT gateway to accept DNS traffic and the gateway will
     # read the query and use the host's operating system APIs to resolve it
     v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
