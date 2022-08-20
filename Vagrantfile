@@ -118,7 +118,8 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provider :libvirt do |v, override|
-    override.vm.synced_folder "./", "/vagrant", type: "nfs"
+    override.vm.synced_folder "./", "/vagrant", type: "virtiofs"
+    v.memorybacking :access, :mode => "shared"
     v.cpu_mode = 'host-passthrough'
     v.nested = true
     v.random_hostname = true
