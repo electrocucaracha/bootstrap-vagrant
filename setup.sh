@@ -37,24 +37,24 @@ function _reload_grub {
 }
 
 function _enable_dnssec {
-    if [ -f /etc/dnsmasq.d/libvirt-daemon ] && ! grep -q "^dnssec$" /etc/dnsmasq.d/libvirt-daemon ; then
-         msg+="- INFO: DNSSEC was enabled in dnsmasq service\n"
-         echo dnssec | sudo tee --append /etc/dnsmasq.d/libvirt-daemon
+    if [ -f /etc/dnsmasq.d/libvirt-daemon ] && ! grep -q "^dnssec$" /etc/dnsmasq.d/libvirt-daemon; then
+        msg+="- INFO: DNSSEC was enabled in dnsmasq service\n"
+        echo dnssec | sudo tee --append /etc/dnsmasq.d/libvirt-daemon
     fi
 }
 
 function _enable_iommu {
     if ! iommu_support=$(sudo virt-host-validate qemu | grep 'Checking for device assignment IOMMU support'); then
-        echo "- WARN - IOMMU support checker reported: $(awk -F':' '{print $3}' <<< "$iommu_support")"
+        echo "- WARN - IOMMU support checker reported: $(awk -F':' '{print $3}' <<<"$iommu_support")"
     fi
     if sudo virt-host-validate qemu | grep -q 'Checking if IOMMU is enabled by kernel'; then
         return
     fi
-    if [[ "${ID,,}" == *clear-linux-os* ]]; then
+    if [[ ${ID,,} == *clear-linux-os* ]]; then
         mkdir -p /etc/kernel/cmdline.d
         echo "intel_iommu=on" | sudo tee /etc/kernel/cmdline.d/enable-iommu.conf
     else
-        if [ -f /etc/default/grub ]  && [[ "$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub)" != *intel_iommu=on* ]]; then
+        if [ -f /etc/default/grub ] && [[ "$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub)" != *intel_iommu=on* ]]; then
             sudo sed -i "s|^GRUB_CMDLINE_LINUX=\(.*\)\"|GRUB_CMDLINE_LINUX=\1 intel_iommu=on\"|g" /etc/default/grub
         fi
     fi
@@ -63,7 +63,7 @@ function _enable_iommu {
 }
 
 function _enable_nested_virtualization {
-    vendor_id=$(lscpu|grep "Vendor ID")
+    vendor_id=$(lscpu | grep "Vendor ID")
     if [[ $vendor_id == *GenuineIntel* ]]; then
         if [ -f /sys/module/kvm_intel/parameters/nested ]; then
             kvm_ok=$(cat /sys/module/kvm_intel/parameters/nested)
@@ -119,7 +119,7 @@ EOL'
 function _create_sriov_vfs {
     _enable_rc_local
     for nic in $(sudo lshw -C network -short | grep Connection | awk '{ print $2 }'); do
-        if [ -e "/sys/class/net/$nic/device/sriov_numvfs" ]  && grep -e up "/sys/class/net/$nic/operstate" > /dev/null ; then
+        if [ -e "/sys/class/net/$nic/device/sriov_numvfs" ] && grep -e up "/sys/class/net/$nic/operstate" >/dev/null; then
             sriov_numvfs=$(cat "/sys/class/net/$nic/device/sriov_totalvfs")
             echo 0 | sudo tee "/sys/class/net/$nic/device/sriov_numvfs"
             echo "$sriov_numvfs" | sudo tee "/sys/class/net/$nic/device/sriov_numvfs"
@@ -134,7 +134,7 @@ function _create_sriov_vfs {
 function _create_qat_vfs {
     _enable_rc_local
 
-    for qat_dev in $(for i in 0434 0435 37c8 6f54 19e2; do lspci -d 8086:$i -m; done|awk '{print $1}'); do
+    for qat_dev in $(for i in 0434 0435 37c8 6f54 19e2; do lspci -d 8086:$i -m; done | awk '{print $1}'); do
         qat_numvfs=$(cat "/sys/bus/pci/devices/0000:$qat_dev/sriov_totalvfs")
         echo 0 | sudo tee "/sys/bus/pci/devices/0000:$qat_dev/sriov_numvfs"
         echo "$qat_numvfs" | sudo tee "/sys/bus/pci/devices/0000:$qat_dev/sriov_numvfs"
@@ -156,30 +156,30 @@ function _vercmp {
     result=$(echo -e "$v1\n$v2" | sort -V | head -1)
 
     case $op in
-        "==")
-            [ "$v1" = "$v2" ]
-            return
-            ;;
-        ">")
-            [ "$v1" != "$v2" ] && [ "$result" = "$v2" ]
-            return
-            ;;
-        "<")
-            [ "$v1" != "$v2" ] && [ "$result" = "$v1" ]
-            return
-            ;;
-        ">=")
-            [ "$result" = "$v2" ]
-            return
-            ;;
-        "<=")
-            [ "$result" = "$v1" ]
-            return
-            ;;
-        *)
-            echo "unrecognised op: $op"
-            exit 1
-            ;;
+    "==")
+        [ "$v1" = "$v2" ]
+        return
+        ;;
+    ">")
+        [ "$v1" != "$v2" ] && [ "$result" = "$v2" ]
+        return
+        ;;
+    "<")
+        [ "$v1" != "$v2" ] && [ "$result" = "$v1" ]
+        return
+        ;;
+    ">=")
+        [ "$result" = "$v2" ]
+        return
+        ;;
+    "<=")
+        [ "$result" = "$v1" ]
+        return
+        ;;
+    *)
+        echo "unrecognised op: $op"
+        exit 1
+        ;;
     esac
 }
 
@@ -189,10 +189,10 @@ function _check_qemu {
         if _vercmp "${qemu_version_installed}" '>' "2.6.0"; then
             if [ -f /etc/libvirt/qemu.conf ]; then
                 # Permissions required to enable Pmem in QEMU
-                sudo sed -i "s/#security_driver .*/security_driver = \"none\"/" /etc/libvirt/qemu.conf
+                sudo sed -i 's/#security_driver .*/security_driver = "none"/' /etc/libvirt/qemu.conf
             fi
             if [ -f /etc/apparmor.d/abstractions/libvirt-qemu ]; then
-                sudo sed -i "s|  /{dev,run}/shm .*|  /{dev,run}/shm rw,|"  /etc/apparmor.d/abstractions/libvirt-qemu
+                sudo sed -i "s|  /{dev,run}/shm .*|  /{dev,run}/shm rw,|" /etc/apparmor.d/abstractions/libvirt-qemu
             fi
             sudo systemctl restart libvirtd
         else
@@ -204,7 +204,7 @@ function _check_qemu {
 }
 
 function _exit_trap() {
-    if [[ "${DEBUG:-false}" == "true" ]]; then
+    if [[ ${DEBUG:-false} == "true" ]]; then
         set +o xtrace
     fi
     printf "CPU usage: "
@@ -232,45 +232,45 @@ function _install_deps {
     # shellcheck disable=SC1091
     source /etc/os-release || source /usr/lib/os-release
     case ${ID,,} in
-        *suse*)
-            if [ "${PROVIDER}" == "libvirt" ]; then
-                 # https://github.com/hashicorp/vagrant/issues/12138
-                 export PKG_VAGRANT_VERSION=2.2.13
-            fi
-            sudo zypper -n ref
-            INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
-            CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib64"
+    *suse*)
+        if [ "${PROVIDER}" == "libvirt" ]; then
+            # https://github.com/hashicorp/vagrant/issues/12138
+            export PKG_VAGRANT_VERSION=2.2.13
+        fi
+        sudo zypper -n ref
+        INSTALLER_CMD="sudo -H -E zypper -q install -y --no-recommends"
+        CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib64"
         ;;
-        ubuntu|debian)
-            echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections
-            sudo apt-get update
-            INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"
-            CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib"
+    ubuntu | debian)
+        echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections
+        sudo apt-get update
+        INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"
+        CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib"
         ;;
-        rhel|centos|fedora)
-            PKG_MANAGER=$(command -v dnf || command -v yum)
-            INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install"
-            if ! sudo "$PKG_MANAGER" repolist | grep "epel/"; then
-                $INSTALLER_CMD epel-release
-            fi
-            sudo "$PKG_MANAGER" updateinfo --assumeyes
-            CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib64"
+    rhel | centos | fedora)
+        PKG_MANAGER=$(command -v dnf || command -v yum)
+        INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install"
+        if ! sudo "$PKG_MANAGER" repolist | grep "epel/"; then
+            $INSTALLER_CMD epel-release
+        fi
+        sudo "$PKG_MANAGER" updateinfo --assumeyes
+        CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib64"
         ;;
     esac
     export CONFIGURE_ARGS
 
     pkgs="vagrant"
     case ${PROVIDER} in
-        virtualbox)
-            pkgs+=" virtualbox"
+    virtualbox)
+        pkgs+=" virtualbox"
         ;;
-        libvirt)
-            $INSTALLER_CMD qemu || :
-            pkgs+=" bridge-utils dnsmasq ebtables libvirt"
-            pkgs+=" qemu-kvm ruby-devel gcc nfs make libguestfs"
-            if [[ "${ID,,}" != *"centos"* ]] && [[ "${VERSION_ID}" != *8* ]]; then
-                pkgs+=" qemu-utils"
-            fi
+    libvirt)
+        $INSTALLER_CMD qemu || :
+        pkgs+=" bridge-utils dnsmasq ebtables libvirt"
+        pkgs+=" qemu-kvm ruby-devel gcc nfs make libguestfs"
+        if [[ ${ID,,} != *"centos"* ]] && [[ ${VERSION_ID} != *8* ]]; then
+            pkgs+=" qemu-utils"
+        fi
         ;;
     esac
     if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
@@ -285,7 +285,7 @@ function _install_deps {
 }
 
 function _install_plugins {
-    if [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ] || [ -n "${NO_PROXY:-}" ]; then
+    if [ -n "${HTTP_PROXY-}" ] || [ -n "${HTTPS_PROXY-}" ] || [ -n "${NO_PROXY-}" ]; then
         vagrant plugin install vagrant-proxyconf
     fi
     if [ "${PROVIDER}" == "libvirt" ]; then
@@ -327,6 +327,6 @@ function main {
     _configure_addons
 }
 
-if [[ "${__name__:-"__main__"}" == "__main__" ]]; then
+if [[ ${__name__:-"__main__"} == "__main__" ]]; then
     main
 fi
