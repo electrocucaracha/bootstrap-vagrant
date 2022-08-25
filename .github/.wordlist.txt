@@ -1,3 +1,4 @@
+brightgreen
 CentOS
 codebase
 contrib
@@ -19,6 +20,7 @@ proxyconf
 QAT
 QuickAssit
 repo
+rubocop
 src
 SRIOV
 svg
