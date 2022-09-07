@@ -2,6 +2,7 @@
 <!-- markdown-link-check-disable-next-line -->
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![GitHub Super-Linter](https://github.com/electrocucaracha/bootstrap-vagrant/workflows/Lint%20Code%20Base/badge.svg)](https://github.com/marketplace/actions/super-linter)
+[![Ruby Style Guide](https://img.shields.io/badge/code_style-rubocop-brightgreen.svg)](https://github.com/rubocop/rubocop)
 ![visitors](https://visitor-badge.glitch.me/badge?page_id=electrocucaracha.bootstrap-vagrant)
 
 This project was created to ensure that [setup.sh](setup.sh) bash script is able
@@ -43,5 +44,18 @@ and executed multiple times.
 | PROVIDER               |         | Specifies the Vagrant Provider to be installed      |
 | CREATE_SRIOV_VFS       | false   | Creates SR-IOV Virtual Functions                    |
 | CREATE_QAT_VFS         | false   | Creates QuickAssit Virtual Functions                |
+
+## Contribution
+
+This is an open project, several individuals contribute in different forms like
+coding, documenting, testing, spreading the word at events within others.
+
+Thanks to all the people who already contributed!
+
+<a href="https://github.com/electrocucaracha/bootstrap-vagrant/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=electrocucaracha/bootstrap-vagrant" />
+</a>
+
+![Visualization of the codebase](./codebase-structure.svg)
 
 [1]: https://www.vagrantup.com/

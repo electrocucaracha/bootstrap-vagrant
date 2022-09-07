@@ -1,4 +1,7 @@
+brightgreen
 CentOS
+codebase
+contrib
 Distros
 electrocucaracha
 fsSL
@@ -16,6 +19,8 @@ pre
 proxyconf
 QAT
 QuickAssit
+repo
+rubocop
 src
 SRIOV
 svg
