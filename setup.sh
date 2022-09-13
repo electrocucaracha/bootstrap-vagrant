@@ -260,6 +260,7 @@ function _install_deps {
     export CONFIGURE_ARGS
 
     pkgs="vagrant"
+    group="vboxusers"
     case ${PROVIDER} in
     virtualbox)
         pkgs+=" virtualbox"
@@ -271,6 +272,7 @@ function _install_deps {
         if [[ ${ID,,} != *"centos"* ]] && [[ ${VERSION_ID} != *8* ]]; then
             pkgs+=" qemu-utils"
         fi
+        group="kvm"
         ;;
     esac
     if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
@@ -282,6 +284,10 @@ function _install_deps {
 
     curl -fsSL http://bit.ly/install_pkg | PKG="$pkgs" PKG_UPDATE=true bash
     msg+="- INFO: Installing vagrant $PKG_VAGRANT_VERSION\n"
+    if (! groups | grep -q "$group") || (! getent group "$group" | grep -q "$USER"); then
+        msg+="- INFO: Adding $USER to $group group\n"
+        sudo usermod -aG "$group" "$USER"
+    fi
 }
 
 function _install_plugins {
