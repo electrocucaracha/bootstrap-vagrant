@@ -107,20 +107,13 @@ Vagrant.configure("2") do |config|
 end
 EOT
 vagrant init generic/alpine316 --box-version 3.5.0 --template vagrant_file.erb
-# shellcheck disable=SC1091
-source /etc/os-release || source /usr/lib/os-release
-if [[ ${ID,,} == "ubuntu" ]]; then
-    sudo -E vagrant up
-    sudo -E vagrant halt
-    sudo -E vagrant package
-    if [ ! -f package.box ]; then
-        error "Vagrant couldn't package the running box"
-    fi
-    sudo -E vagrant destroy -f
-else
-    vagrant status
-    warn "There are some unsolved vagrant-libvirt issues with this distro"
+vagrant up || :
+vagrant halt
+vagrant package
+if [ ! -f package.box ]; then
+    warn "Vagrant couldn't package the running box"
 fi
+vagrant destroy -f || :
 popd
 
 trap ERR
