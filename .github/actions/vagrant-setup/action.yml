@@ -14,12 +14,12 @@ runs:
   using: "composite"
   steps:
     - name: Cache Vagrant boxes
-      uses: actions/cache@v3
+      uses: actions/cache@v3.0.10
       with:
         path: ~/.vagrant.d/boxes
-        key: ${{ runner.os }}-vagrant-ubuntu-bionic-${{ hashFiles('distros_supported.yml') }}
+        key: ${{ runner.os }}-vagrant-${{ hashFiles('distros_supported.yml') }}
         restore-keys: |
-          ${{ runner.os }}-vagrant-ubuntu-bionic-
+          ${{ runner.os }}-vagrant-
     - name: Apply workaround for VBoxHeadless issue on macOS (https://www.virtualbox.org/ticket/20636)
       shell: bash
       run: |
