@@ -87,6 +87,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.1.0
       - uses: ./.github/actions/vagrant-setup
+        with:
+          distro: ${{ matrix.os }}
       - name: Check Libvirt Provider
         if: matrix.provider == 'libvirt' || matrix.provider == 'all'
         uses: ./.github/actions/vagrant-up

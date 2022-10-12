@@ -39,6 +39,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.1.0
       - uses: ./.github/actions/vagrant-setup
+        with:
+          distro: ${{ matrix.os }}
       - uses: ./.github/actions/vagrant-up
         with:
           provider: libvirt

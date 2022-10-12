@@ -27,8 +27,6 @@ jobs:
         with:
           path: ~/.vagrant.d/boxes
           key: ${{ runner.os }}-vagrant-${{ hashFiles('distros_supported.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-vagrant-
       - name: Install vagrant tool
         run: brew install vagrant
       - uses: technote-space/create-pr-action@v2.1.3

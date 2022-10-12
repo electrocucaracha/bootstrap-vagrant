@@ -10,6 +10,11 @@
 
 name: Vagrant setup
 
+inputs:
+  distro:
+    description: Linux distribution
+    default: ubuntu_focal
+
 runs:
   using: "composite"
   steps:
@@ -17,9 +22,10 @@ runs:
       uses: actions/cache@v3.0.10
       with:
         path: ~/.vagrant.d/boxes
-        key: ${{ runner.os }}-vagrant-${{ hashFiles('distros_supported.yml') }}
+        key: ${{ runner.os }}-vagrant-${{ inputs.distro }}-${{ hashFiles('distros_supported.yml') }}
         restore-keys: |
-          ${{ runner.os }}-vagrant-
+          ${{ runner.os }}-vagrant-${{ inputs.distro }}-
+          ${{ runner.os }}-vagrant-${{ hashFiles('distros_supported.yml') }}
     - name: Apply workaround for VBoxHeadless issue on macOS (https://www.virtualbox.org/ticket/20636)
       shell: bash
       run: |
