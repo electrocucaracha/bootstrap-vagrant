@@ -22,7 +22,7 @@ jobs:
       contents: write  # for technote-space/create-pr-action to push code
       pull-requests: write  # for technote-space/create-pr-action to create a PR
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.4.0
       - uses: actions/cache@v3.3.1
         with:
           path: ~/.vagrant.d/boxes
