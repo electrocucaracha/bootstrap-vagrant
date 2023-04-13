@@ -32,7 +32,7 @@ jobs:
     outputs:
       scripts: ${{ steps.filter.outputs.scripts }}
     steps:
-      - uses: actions/checkout@v3.5.0
+      - uses: actions/checkout@v3.5.1
       - uses: dorny/paths-filter@v2.11.1
         if: ${{ !env.ACT }}
         id: filter
@@ -47,7 +47,7 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.5.0
+      - uses: actions/checkout@v3.5.1
       - name: Run the sh-checker
         uses: luizm/action-sh-checker@v0.7.0
         env:
@@ -61,7 +61,7 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.5.0
+      - uses: actions/checkout@v3.5.1
       - name: Install ShellSpec
         run: curl -fsSL https://github.com/shellspec/shellspec/releases/latest/download/shellspec-dist.tar.gz | tar -xz -C ..
       - name: Run Shellspec
@@ -85,7 +85,7 @@ jobs:
           - os: opensuse_leap
             provider: virtualbox
     steps:
-      - uses: actions/checkout@v3.5.0
+      - uses: actions/checkout@v3.5.1
       - uses: ./.github/actions/vagrant-setup
         with:
           distro: ${{ matrix.os }}
