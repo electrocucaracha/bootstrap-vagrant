@@ -18,6 +18,7 @@ vagrant_provider = ENV['PROVIDER'] || 'libvirt'
 create_sriov_vfs = ENV['CREATE_SRIOV_VFS']
 create_qat_vfs = ENV['CREATE_QAT_VFS']
 
+require "yaml"
 distros = YAML.load_file("#{File.dirname(__FILE__)}/distros_supported.yml")
 
 # rubocop:disable Metrics/BlockLength
