@@ -274,7 +274,7 @@ function _install_deps {
         fi
         # Make kernel image world-readable required for supermin
         if command -v dpkg-statoverride; then
-            sudo dpkg-statoverride --update --add root root 0644 "/boot/vmlinuz-$(uname -r)"
+            sudo dpkg-statoverride --update --add root root 0644 "/boot/vmlinuz-$(uname -r)" || :
         fi
         group="kvm"
         ;;
