@@ -10,6 +10,7 @@ https
 img
 initVagrant
 IOV
+laobi
 Libvirt
 Linter
 ly

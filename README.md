@@ -4,7 +4,7 @@
 [![GitHub Super-Linter](https://github.com/electrocucaracha/bootstrap-vagrant/workflows/Lint%20Code%20Base/badge.svg)](https://github.com/marketplace/actions/super-linter)
 [![Ruby Style Guide](https://img.shields.io/badge/code_style-rubocop-brightgreen.svg)](https://github.com/rubocop/rubocop)
 <!-- markdown-link-check-disable-next-line -->
-![visitors](https://visitor-badge.glitch.me/badge?page_id=electrocucaracha.bootstrap-vagrant)
+![visitors](https://visitor-badge.laobi.icu/badge?page_id=electrocucaracha.bootstrap-vagrant)
 
 This project was created to ensure that [setup.sh](setup.sh) bash script is able
 to install [Vagrant tool][1] in different Linux Distributions. It covers the
