@@ -74,7 +74,7 @@ cat <<EOT >.distros_supported.yml
 ---
 # SPDX-license-identifier: Apache-2.0
 ##############################################################################
-# Copyright (c) 2019
+# Copyright (c) 2019 - $(date '+%Y')
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Apache License, Version 2.0
 # which accompanies this distribution, and is available at
@@ -85,9 +85,10 @@ linux:
 EOT
 
 _vagrant_pull "centos_7" "centos/7"
-_vagrant_pull "centos_8" "centos/stream8"
+_vagrant_pull "rocky_8" "rockylinux/8"
 _vagrant_pull "ubuntu_bionic" "generic/ubuntu1804"
 _vagrant_pull "ubuntu_focal" "generic/ubuntu2004"
+_vagrant_pull "ubuntu_jammy" "generic/ubuntu2204"
 _vagrant_pull "opensuse_tumbleweed" "opensuse/Tumbleweed.x86_64"
 _vagrant_pull "opensuse_leap" "opensuse/Leap-15.2.x86_64"
 

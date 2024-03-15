@@ -269,6 +269,7 @@ function _install_deps {
         $INSTALLER_CMD qemu || :
         pkgs+=" bridge-utils dnsmasq ebtables libvirt"
         pkgs+=" qemu-kvm ruby-devel gcc nfs make libguestfs"
+        pkgs+=" pkgconf"
         if [[ ${ID,,} != *"centos"* ]] && [[ ${VERSION_ID} != *8* ]]; then
             pkgs+=" qemu-utils"
         fi

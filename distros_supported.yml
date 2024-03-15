@@ -1,7 +1,7 @@
 ---
 # SPDX-license-identifier: Apache-2.0
 ##############################################################################
-# Copyright (c) 2019
+# Copyright (c) 2019 - 2024
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Apache License, Version 2.0
 # which accompanies this distribution, and is available at
@@ -12,18 +12,21 @@ linux:
   - alias: centos_7
     name: centos/7
     version: "2004.01"
-  - alias: centos_8
-    name: centos/stream8
-    version: "20210210.0"
+  - alias: rocky_8
+    name: rockylinux/8
+    version: "9.0.0"
   - alias: ubuntu_bionic
     name: generic/ubuntu1804
-    version: "4.2.6"
+    version: "4.3.12"
   - alias: ubuntu_focal
     name: generic/ubuntu2004
-    version: "4.2.6"
+    version: "4.3.12"
+  - alias: ubuntu_jammy
+    name: generic/ubuntu2204
+    version: "4.3.12"
   - alias: opensuse_tumbleweed
     name: opensuse/Tumbleweed.x86_64
-    version: "1.0.20221230"
+    version: "1.0.20240313"
   - alias: opensuse_leap
     name: opensuse/Leap-15.2.x86_64
     version: "15.2.31.632"

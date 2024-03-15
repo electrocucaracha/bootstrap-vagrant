@@ -12,11 +12,12 @@ installation of its dependencies, plugins and providers.
 
 ## Linux Distros supported
 
-| Name       | Version         |
-|:-----------|:---------------:|
-| Ubuntu     | 18.04/20.04     |
-| CentOS     | 7/8             |
-| openSUSE   | Tumbleweed/Leap |
+| Name       | Version           |
+|:-----------|:-----------------:|
+| Ubuntu     | 18.04/20.04/22.04 |
+| CentOS     | 7                 |
+| Rocky      | 8                 |
+| openSUSE   | Tumbleweed/Leap   |
 
 ## Vagrant Providers supported
 
