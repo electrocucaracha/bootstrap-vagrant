@@ -313,6 +313,8 @@ function _install_plugins {
         _enable_nested_virtualization
     fi
     vagrant plugin install vagrant-reload
+    vagrant plugin install vagrant-packet
+    vagrant plugin install vagrant-google
 }
 
 function _configure_addons {

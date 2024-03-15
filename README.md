@@ -30,6 +30,9 @@ installation of its dependencies, plugins and providers.
 * vagrant-proxyconf
 * vagrant-libvirt
 * vagrant-reload
+* vagrant-packet
+* vagrant-google
+
 
 ## How use this script?
 
