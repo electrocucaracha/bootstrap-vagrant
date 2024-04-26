@@ -1,5 +1,7 @@
+boyter
 brightgreen
 CentOS
+COCOMO
 codebase
 contrib
 Distros
@@ -22,9 +24,12 @@ QAT
 QuickAssit
 repo
 rubocop
+scc
+sloc
 src
 SRIOV
 svg
 vagrantup
 VFS
 VirtualBox
+xyz
