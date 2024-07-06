@@ -19,7 +19,7 @@ jobs:
   check-ubuntu-bionic-baremetal:
     runs-on: ubuntu-18.04
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # refs/tags/v4.1.7
       - name: Setup services
         env:
           PROVIDER: libvirt
@@ -37,7 +37,7 @@ jobs:
           - os: centos_8
             qat: false
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # refs/tags/v4.1.7
       - uses: ./.github/actions/vagrant-setup
         with:
           distro: ${{ matrix.os }}
