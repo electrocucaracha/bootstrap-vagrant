@@ -24,7 +24,7 @@ QAT
 QuickAssit
 repo
 rubocop
-scc
+Scc
 sloc
 src
 SRIOV
