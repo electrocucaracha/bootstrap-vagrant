@@ -69,7 +69,7 @@ jobs:
         run: ../shellspec/shellspec --profile --xtrace
   check-setup:
     name: Check setup script on different distros using libvirt and/or virtualbox providers
-    runs-on: macos-12
+    runs-on: vm-self-hosted
     if: >-
       (
         github.event_name == 'pull_request_review' &&

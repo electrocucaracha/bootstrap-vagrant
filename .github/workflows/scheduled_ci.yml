@@ -27,7 +27,7 @@ jobs:
           CREATE_QAT_VFS: true
         run: ./setup.sh
   check-vagrant:
-    runs-on: macos-12
+    runs-on: vm-self-hosted
     strategy:
       fail-fast: false
       matrix:
