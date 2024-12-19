@@ -31,8 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu_focal]
-        qat: [true]
+        os: [ubuntu_focal, ubuntu_jammy, rocky_9]
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # refs/tags/v4.1.7
       - uses: ./.github/actions/vagrant-setup
@@ -43,4 +42,3 @@ jobs:
           provider: libvirt
           os: ${{ matrix.os }}
           enable_sriov_vfs: true
-          enable_qat_vfs: ${{ matrix.qat }}
