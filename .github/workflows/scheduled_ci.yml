@@ -31,11 +31,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [centos_7, ubuntu_focal]
+        os: [ubuntu_focal]
         qat: [true]
-        include:
-          - os: centos_8
-            qat: false
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # refs/tags/v4.1.7
       - uses: ./.github/actions/vagrant-setup

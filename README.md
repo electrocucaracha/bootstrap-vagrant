@@ -17,7 +17,6 @@ installation of its dependencies, plugins and providers.
 | Name       | Version         |
 |:-----------|:---------------:|
 | Ubuntu     | 20.04/22.04     |
-| CentOS     | 7               |
 | Rocky      | 9               |
 | openSUSE   | Tumbleweed/Leap |
 

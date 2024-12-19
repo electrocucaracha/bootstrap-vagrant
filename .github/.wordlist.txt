@@ -1,6 +1,5 @@
 boyter
 brightgreen
-CentOS
 COCOMO
 codebase
 contrib

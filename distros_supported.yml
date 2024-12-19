@@ -9,9 +9,6 @@
 ##############################################################################
 
 linux:
-  - alias: centos_7
-    name: centos/7
-    version: "2004.01"
   - alias: rocky_9
     name: community/rockylinux-9
     version: "1.0.0"
