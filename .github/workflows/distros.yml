@@ -7,31 +7,29 @@
 # which accompanies this distribution, and is available at
 # http://www.apache.org/licenses/LICENSE-2.0
 ##############################################################################
-
 name: Scheduled Latest Vagrant Boxes verification
 # yamllint disable-line rule:truthy
 on:
   schedule:
-    - cron: '0 0 1 * *'
+    - cron: "0 0 1 * *"
   workflow_dispatch:
-
 jobs:
   check-versions:
     runs-on: vm-self-hosted
     permissions:
-      contents: write  # for technote-space/create-pr-action to push code
-      pull-requests: write  # for technote-space/create-pr-action to create a PR
+      contents: write # for technote-space/create-pr-action to push code
+      pull-requests: write # for technote-space/create-pr-action to create a PR
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # refs/tags/v4.1.7
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # refs/tags/v4.0.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+      - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # 4.2.0
         with:
           path: ~/.vagrant.d/boxes
           key: ${{ runner.os }}-vagrant-${{ hashFiles('distros_supported.yml') }}
-      - uses: technote-space/create-pr-action@91114507cf92349bec0a9a501c2edf1635427bc5 # refs/tags/v2.1.4
+      - uses: technote-space/create-pr-action@91114507cf92349bec0a9a501c2edf1635427bc5 # 2.1.4
         with:
           EXECUTE_COMMANDS: |
             ./ci/update_distros.sh
-          COMMIT_MESSAGE: 'Upgrade distro list versions'
-          COMMIT_NAME: 'electrocucaracha bot'
+          COMMIT_MESSAGE: "Upgrade distro list versions"
+          COMMIT_NAME: "electrocucaracha bot"
           PR_BRANCH_NAME: "versions-update-${PR_ID}"
-          PR_TITLE: 'chore: update distro versions'
+          PR_TITLE: "chore: update distro versions"

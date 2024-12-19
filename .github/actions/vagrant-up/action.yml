@@ -7,28 +7,26 @@
 # which accompanies this distribution, and is available at
 # http://www.apache.org/licenses/LICENSE-2.0
 ##############################################################################
-
 name: Vagrant up
 inputs:
   memory:
-    description: 'Memory'
+    description: "Memory"
     default: 12288
   cpu:
-    description: 'CPU'
+    description: "CPU"
     default: 3
   provider:
-    description: 'Vagrant provider'
+    description: "Vagrant provider"
     default: libvirt
   os:
-    description: 'Linux distribution'
+    description: "Linux distribution"
     default: ubuntu_focal
   enable_sriov_vfs:
-    description: 'Enable SR-IOV Virtual Functions'
+    description: "Enable SR-IOV Virtual Functions"
     default: false
   enable_qat_vfs:
-    description: 'Enable QuickAssist Virtual Functions'
+    description: "Enable QuickAssist Virtual Functions"
     default: false
-
 runs:
   using: "composite"
   steps:

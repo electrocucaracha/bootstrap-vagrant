@@ -7,19 +7,17 @@
 # which accompanies this distribution, and is available at
 # http://www.apache.org/licenses/LICENSE-2.0
 ##############################################################################
-
 name: Scheduled VFS install verification
 # yamllint disable-line rule:truthy
 on:
   schedule:
-    - cron: '0 0 * * 5'
+    - cron: "0 0 * * 5"
   workflow_dispatch:
-
 jobs:
   check-ubuntu-jammy-baremetal:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # refs/tags/v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
       - name: Setup services
         env:
           PROVIDER: libvirt
@@ -33,7 +31,7 @@ jobs:
       matrix:
         os: [ubuntu_focal, ubuntu_jammy, rocky_9]
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # refs/tags/v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
       - uses: ./.github/actions/vagrant-setup
         with:
           distro: ${{ matrix.os }}

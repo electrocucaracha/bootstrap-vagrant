@@ -7,33 +7,27 @@
 # which accompanies this distribution, and is available at
 # http://www.apache.org/licenses/LICENSE-2.0
 ##############################################################################
-
 name: Check All
 # yamllint disable-line rule:truthy
 on:
   push:
     paths:
       - distros_supported.yml
-      - '**.sh'
+      - "**.sh"
   pull_request_review:
     types:
       - submitted
   workflow_dispatch:
-
 jobs:
   changes:
     runs-on: ubuntu-latest
     if: >-
-      (
-        github.event_name == 'pull_request_review' &&
-        github.event.review.state == 'approved'
-      ) ||
-      github.event_name != 'pull_request_review'
+      ( github.event_name == 'pull_request_review' && github.event.review.state == 'approved' ) || github.event_name != 'pull_request_review'
     outputs:
       scripts: ${{ steps.filter.outputs.scripts }}
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # refs/tags/v4.1.7
-      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # refs/tags/v3.0.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # 3.0.2
         if: ${{ !env.ACT }}
         id: filter
         with:
@@ -47,9 +41,9 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # refs/tags/v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
       - name: Run the sh-checker
-        uses: luizm/action-sh-checker@c6edb3de93e904488b413636d96c6a56e3ad671a # refs/tags/v0.8.0
+        uses: luizm/action-sh-checker@17bd25a6ee188d2b91f677060038f4ba37ba14b2 # 0.9.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHFMT_OPTS: -i 4 -s
@@ -61,7 +55,7 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # refs/tags/v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
       - name: Install ShellSpec
         run: curl -fsSL https://github.com/shellspec/shellspec/releases/latest/download/shellspec-dist.tar.gz | tar -xz -C ..
       - name: Run Shellspec
@@ -71,11 +65,7 @@ jobs:
     name: Check setup script on different distros using libvirt and/or virtualbox providers
     runs-on: vm-self-hosted
     if: >-
-      (
-        github.event_name == 'pull_request_review' &&
-        github.event.review.state == 'approved'
-      ) ||
-      github.event_name != 'pull_request_review'
+      ( github.event_name == 'pull_request_review' && github.event.review.state == 'approved' ) || github.event_name != 'pull_request_review'
     strategy:
       fail-fast: false
       matrix:
@@ -85,7 +75,7 @@ jobs:
           - os: opensuse_leap
             provider: virtualbox
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # refs/tags/v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
       - uses: ./.github/actions/vagrant-setup
         with:
           distro: ${{ matrix.os }}

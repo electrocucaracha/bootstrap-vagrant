@@ -1,9 +1,13 @@
 # Bootstrap Vagrant
+
 <!-- markdown-link-check-disable-next-line -->
+
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![GitHub Super-Linter](https://github.com/electrocucaracha/bootstrap-vagrant/workflows/Lint%20Code%20Base/badge.svg)](https://github.com/marketplace/actions/super-linter)
 [![Ruby Style Guide](https://img.shields.io/badge/code_style-rubocop-brightgreen.svg)](https://github.com/rubocop/rubocop)
+
 <!-- markdown-link-check-disable-next-line -->
+
 ![visitors](https://visitor-badge.laobi.icu/badge?page_id=electrocucaracha.bootstrap-vagrant)
 [![Scc Code Badge](https://sloc.xyz/github/electrocucaracha/bootstrap-vagrant?category=code)](https://github.com/boyter/scc/)
 [![Scc COCOMO Badge](https://sloc.xyz/github/electrocucaracha/bootstrap-vagrant?category=cocomo)](https://github.com/boyter/scc/)
@@ -14,27 +18,26 @@ installation of its dependencies, plugins and providers.
 
 ## Linux Distros supported
 
-| Name       | Version         |
-|:-----------|:---------------:|
-| Ubuntu     | 20.04/22.04     |
-| Rocky      | 9               |
-| openSUSE   | Tumbleweed/Leap |
+| Name     |     Version     |
+| :------- | :-------------: |
+| Ubuntu   |   20.04/22.04   |
+| Rocky    |        9        |
+| openSUSE | Tumbleweed/Leap |
 
 ## Vagrant Providers supported
 
 | Name       | Version |
-|:-----------|:-------:|
-| VirtualBox | 6.1     |
+| :--------- | :-----: |
+| VirtualBox |   6.1   |
 | Libvirt    |         |
 
 ## Vagrant Plugins installed
 
-* vagrant-proxyconf
-* vagrant-libvirt
-* vagrant-reload
-* vagrant-packet
-* vagrant-google
-
+- vagrant-proxyconf
+- vagrant-libvirt
+- vagrant-reload
+- vagrant-packet
+- vagrant-google
 
 ## How use this script?
 
@@ -45,11 +48,11 @@ and executed multiple times.
 
 ### Environment variables
 
-| Name                   | Default | Description                                         |
-|:-----------------------|:-------:|:----------------------------------------------------|
-| PROVIDER               |         | Specifies the Vagrant Provider to be installed      |
-| CREATE_SRIOV_VFS       | false   | Creates SR-IOV Virtual Functions                    |
-| CREATE_QAT_VFS         | false   | Creates QuickAssit Virtual Functions                |
+| Name             | Default | Description                                    |
+| :--------------- | :-----: | :--------------------------------------------- |
+| PROVIDER         |         | Specifies the Vagrant Provider to be installed |
+| CREATE_SRIOV_VFS |  false  | Creates SR-IOV Virtual Functions               |
+| CREATE_QAT_VFS   |  false  | Creates QuickAssit Virtual Functions           |
 
 ## Contribution
 
