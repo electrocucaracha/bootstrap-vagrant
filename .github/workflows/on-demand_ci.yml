@@ -79,7 +79,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu_focal, ubuntu_bionic, ubuntu_jammy, rocky_8, centos_7, opensuse_tumbleweed]
+        os: [ubuntu_focal, ubuntu_bionic, ubuntu_jammy, rocky_9, centos_7, opensuse_tumbleweed]
         provider: [all]
         include:
           - os: opensuse_leap

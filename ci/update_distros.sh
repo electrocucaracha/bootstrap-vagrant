@@ -85,7 +85,7 @@ linux:
 EOT
 
 _vagrant_pull "centos_7" "centos/7"
-_vagrant_pull "rocky_8" "generic/rocky8"
+_vagrant_pull "rocky_9" "community/rockylinux-9"
 _vagrant_pull "ubuntu_bionic" "generic/ubuntu1804"
 _vagrant_pull "ubuntu_focal" "generic/ubuntu2004"
 _vagrant_pull "ubuntu_jammy" "generic/ubuntu2204"

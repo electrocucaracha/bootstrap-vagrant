@@ -18,7 +18,7 @@ installation of its dependencies, plugins and providers.
 |:-----------|:-----------------:|
 | Ubuntu     | 18.04/20.04/22.04 |
 | CentOS     | 7                 |
-| Rocky      | 8                 |
+| Rocky      | 9                 |
 | openSUSE   | Tumbleweed/Leap   |
 
 ## Vagrant Providers supported
