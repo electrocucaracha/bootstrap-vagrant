@@ -80,7 +80,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu_focal, ubuntu_jammy, rocky_9, opensuse_tumbleweed]
-        provider: [all]
+        provider: [virtualbox, libvirt]
         include:
           - os: opensuse_leap
             provider: virtualbox
@@ -89,23 +89,8 @@ jobs:
       - uses: ./.github/actions/vagrant-setup
         with:
           distro: ${{ matrix.os }}
-      - name: Check Libvirt Provider
-        if: matrix.provider == 'libvirt' || matrix.provider == 'all'
+      - name: Vagrant up validation
         uses: ./.github/actions/vagrant-up
         with:
-          provider: libvirt
-          os: ${{ matrix.os }}
-      - name: Clenup instance
-        if: matrix.provider == 'libvirt' || matrix.provider == 'all'
-        env:
-          PROVIDER: libvirt
-          VAGRANT_NAME: ${{ matrix.os }}_libvirt
-        run: |
-          vagrant halt "$VAGRANT_NAME"
-          vagrant destroy -f "$VAGRANT_NAME"
-      - name: Check VirtualBox Provider
-        if: matrix.provider == 'virtualbox' || matrix.provider == 'all'
-        uses: ./.github/actions/vagrant-up
-        with:
-          provider: virtualbox
+          provider: ${{ matrix.provider }}
           os: ${{ matrix.os }}
