@@ -15,7 +15,6 @@ set -o pipefail
 msg="Summary \n"
 export PKG_VAGRANT_VERSION=${PKG_VAGRANT_VERSION:-2.4.1}
 export PKG_VIRTUALBOX_VERSION=6.1
-export PKG_QAT_DRIVER_VERSION=1.7.l.4.11.0-00001
 if [ "${DEBUG:-false}" == "true" ]; then
     set -o xtrace
     export PKG_DEBUG=true
@@ -128,20 +127,6 @@ function _create_sriov_vfs {
             fi
             msg+="- INFO: $sriov_numvfs SR-IOV Virtual Functions enabled on $nic\n"
         fi
-    done
-}
-
-function _create_qat_vfs {
-    _enable_rc_local
-
-    for qat_dev in $(for i in 0434 0435 37c8 6f54 19e2; do lspci -d 8086:$i -m; done | awk '{print $1}'); do
-        qat_numvfs=$(cat "/sys/bus/pci/devices/0000:$qat_dev/sriov_totalvfs")
-        echo 0 | sudo tee "/sys/bus/pci/devices/0000:$qat_dev/sriov_numvfs"
-        echo "$qat_numvfs" | sudo tee "/sys/bus/pci/devices/0000:$qat_dev/sriov_numvfs"
-        if ! grep "/0000:$qat_dev/sriov_numvfs" /etc/rc.d/rc.local; then
-            echo "echo '$qat_numvfs' > /sys/bus/pci/devices/0000:$qat_dev/sriov_numvfs" | sudo tee --append /etc/rc.d/rc.local
-        fi
-        msg+="- INFO: $qat_numvfs QAT Virtual Functions enabled on $qat_dev\n"
     done
 }
 
@@ -283,9 +268,6 @@ function _install_deps {
     if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
         pkgs+=" sysfsutils lshw"
     fi
-    if [ "${CREATE_QAT_VFS:-false}" == "true" ]; then
-        pkgs+=" qat-driver"
-    fi
 
     curl -fsSL http://bit.ly/install_pkg | PKG="$pkgs" PKG_UPDATE=true bash
     msg+="- INFO: Installing vagrant $PKG_VAGRANT_VERSION\n"
@@ -322,10 +304,6 @@ function _configure_addons {
     if [ "${CREATE_SRIOV_VFS:-false}" == "true" ]; then
         _create_sriov_vfs
         msg+="- INFO: SR-IOV Virtual Functions were created\n"
-    fi
-    if [ "${CREATE_QAT_VFS:-false}" == "true" ]; then
-        _create_qat_vfs
-        msg+="- INFO: The Intel QuickAssist Technology drivers were installed using the $PKG_QAT_DRIVER_VERSION version\n"
     fi
 }
 

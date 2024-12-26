@@ -81,17 +81,6 @@ else
 fi
 export VAGRANT_DEFAULT_PROVIDER
 
-if [ -f /etc/init.d/qat_service ]; then
-    info "Validating Intel QuickAssist drivers installation"
-    if ! sudo /etc/init.d/qat_service status | grep "There is .* QAT acceleration device(s) in the system:" >/dev/null; then
-        error "QAT drivers and/or service weren't installed properly"
-    else
-        if [[ -z "$(for i in 0442 0443 37c9 19e3; do lspci -d 8086:$i; done)" ]]; then
-            warn "There are no Virtual Functions enabled for any QAT device"
-        fi
-    fi
-fi
-
 info "Validating Vagrant operation"
 pushd "$(mktemp -d)"
 cat <<EOT >vagrant_file.erb

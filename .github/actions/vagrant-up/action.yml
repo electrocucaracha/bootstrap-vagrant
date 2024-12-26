@@ -24,9 +24,6 @@ inputs:
   enable_sriov_vfs:
     description: "Enable SR-IOV Virtual Functions"
     default: false
-  enable_qat_vfs:
-    description: "Enable QuickAssist Virtual Functions"
-    default: false
 runs:
   using: "composite"
   steps:
@@ -39,5 +36,4 @@ runs:
         PROVIDER: ${{ inputs.provider }}
         VAGRANT_NAME: ${{ inputs.os }}_${{ inputs.provider }}
         CREATE_SRIOV_VFS: ${{ inputs.enable_sriov_vfs }}
-        CREATE_QAT_VFS: ${{ inputs.enable_qat_vfs }}
       run: vagrant up "$VAGRANT_NAME"

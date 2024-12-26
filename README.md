@@ -52,7 +52,6 @@ and executed multiple times.
 | :--------------- | :-----: | :--------------------------------------------- |
 | PROVIDER         |         | Specifies the Vagrant Provider to be installed |
 | CREATE_SRIOV_VFS |  false  | Creates SR-IOV Virtual Functions               |
-| CREATE_QAT_VFS   |  false  | Creates QuickAssit Virtual Functions           |
 
 ## Contribution
 

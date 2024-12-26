@@ -16,7 +16,6 @@ no_proxy = ENV['NO_PROXY'] || ENV['no_proxy'] || '127.0.0.1,localhost'
 end
 vagrant_provider = ENV['PROVIDER'] || 'libvirt'
 create_sriov_vfs = ENV['CREATE_SRIOV_VFS']
-create_qat_vfs = ENV['CREATE_QAT_VFS']
 
 require "yaml"
 distros = YAML.load_file("#{File.dirname(__FILE__)}/distros_supported.yml")
@@ -82,8 +81,7 @@ Vagrant.configure('2') do |config|
   config.vm.provision 'shell', privileged: false do |sh|
     sh.env = {
       'DEBUG': 'true',
-      'CREATE_SRIOV_VFS': create_sriov_vfs.to_s,
-      'CREATE_QAT_VFS': create_qat_vfs.to_s
+      'CREATE_SRIOV_VFS': create_sriov_vfs.to_s
     }
     sh.inline = <<-SHELL
       set -o errexit

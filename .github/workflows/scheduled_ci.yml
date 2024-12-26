@@ -22,7 +22,6 @@ jobs:
         env:
           PROVIDER: libvirt
           CREATE_SRIOV_VFS: true
-          CREATE_QAT_VFS: true
         run: ./setup.sh
   check-vagrant:
     runs-on: vm-self-hosted
