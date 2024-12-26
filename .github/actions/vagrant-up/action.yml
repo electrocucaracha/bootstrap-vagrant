@@ -38,3 +38,9 @@ runs:
         VAGRANT_NAME: ${{ inputs.os }}_${{ inputs.provider }}
         CREATE_SRIOV_VFS: ${{ inputs.enable_sriov_vfs }}
       run: vagrant up "$VAGRANT_NAME"
+    - name: Check HW resources
+      if: failure()
+      shell: bash
+      run: |
+        VBoxManage list runningvms --long
+        cat ~/.config/VirtualBox/*.log
