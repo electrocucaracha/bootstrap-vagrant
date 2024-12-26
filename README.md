@@ -61,7 +61,7 @@ coding, documenting, testing, spreading the word at events within others.
 Thanks to all the people who already contributed!
 
 <a href="https://github.com/electrocucaracha/bootstrap-vagrant/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=electrocucaracha/bootstrap-vagrant" />
+  <img src="https://contrib.rocks/image?repo=electrocucaracha/bootstrap-vagrant" alt="Contributors" />
 </a>
 
 ![Visualization of the codebase](./codebase-structure.svg)

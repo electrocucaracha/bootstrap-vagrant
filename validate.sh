@@ -83,6 +83,7 @@ export VAGRANT_DEFAULT_PROVIDER
 
 info "Validating Vagrant operation"
 pushd "$(mktemp -d)"
+# editorconfig-checker-disable
 cat <<EOT >vagrant_file.erb
 Vagrant.configure("2") do |config|
   config.vm.box = "<%= box_name %>"
@@ -95,6 +96,7 @@ Vagrant.configure("2") do |config|
   end
 end
 EOT
+# editorconfig-checker-enable
 vagrant init generic/alpine316 --box-version 3.5.0 --template vagrant_file.erb
 vagrant up || :
 vagrant halt

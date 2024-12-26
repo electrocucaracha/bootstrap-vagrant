@@ -18,6 +18,7 @@ on:
     types:
       - submitted
   workflow_dispatch:
+permissions: read-all
 jobs:
   changes:
     runs-on: ubuntu-latest

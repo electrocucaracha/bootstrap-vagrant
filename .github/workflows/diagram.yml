@@ -15,6 +15,7 @@ on:
       - codebase-structure.svg
       - .github/
   workflow_dispatch:
+permissions: read-all
 jobs:
   check-diagram:
     name: Update the codebase structure diagram

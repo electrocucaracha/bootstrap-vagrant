@@ -14,7 +14,9 @@ lint:
 	sudo -E $(DOCKER_CMD) run --rm -v $$(pwd):/tmp/lint \
 	-e RUN_LOCAL=true \
 	-e LINTER_RULES_PATH=/ \
-	github/super-linter
+	-e VALIDATE_SHELL_SHFMT=false \
+	-e EDITORCONFIG_FILE_NAME=.editorconfig \
+	ghcr.io/super-linter/super-linter
 	tox -e lint
 
 .PHONY: fmt
