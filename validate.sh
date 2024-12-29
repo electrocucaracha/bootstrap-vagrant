@@ -14,10 +14,12 @@ set -o errexit
 
 function info {
     _print_msg "INFO" "$1"
+    echo "::notice::$1"
 }
 
 function warn {
     _print_msg "WARN" "$1"
+    echo "::warning::$1"
 }
 
 function error {
@@ -26,15 +28,30 @@ function error {
 }
 
 function _print_msg {
-    msg+="$(date +%H:%M:%S) - $1: $2\n"
+    echo "$(date +%H:%M:%S) - $1: $2"
 }
 
-function print_summary {
-    echo -e "$msg"
+function _exit_trap {
+    if [ -f /proc/stat ]; then
+        printf "CPU usage: "
+        grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage " %"}'
+    fi
+    if [ -f /proc/pressure/io ]; then
+        printf "I/O Pressure Stall Information (PSI): "
+        grep full /proc/pressure/io | awk '{ sub(/avg300=/, ""); print $4 }'
+    fi
+    printf "Memory free(Kb):"
+    if [ -f /proc/zoneinfo ]; then
+        awk -v low="$(grep low /proc/zoneinfo | awk '{k+=$2}END{print k}')" '{a[$1]=$2}  END{ print a["MemFree:"]+a["Active(file):"]+a["Inactive(file):"]+a["SReclaimable:"]-(12*low);}' /proc/meminfo
+    fi
+    if command -v vm_stat; then
+        vm_stat | awk '/Pages free/ {print $3 * 4 }'
+    fi
+    ! command -v VBoxManage >/dev/null || VBoxManage list runningvms --long
+    ! command -v virsh >/dev/null || virsh list
 }
 
-msg="Summary:\n\n"
-trap print_summary ERR
+trap _exit_trap ERR
 
 if ! command -v vagrant >/dev/null; then
     error "Vagrant command line wasn't installed"
@@ -106,6 +123,3 @@ if [ ! -f package.box ]; then
 fi
 vagrant destroy -f || :
 popd
-
-trap ERR
-print_summary
