@@ -115,11 +115,15 @@ end
 EOT
 # editorconfig-checker-enable
 vagrant init generic/alpine316 --box-version 3.5.0 --template vagrant_file.erb
-vagrant up || :
-vagrant halt
-vagrant package
-if [ ! -f package.box ]; then
-    warn "Vagrant couldn't package the running box"
+if vagrant up >/dev/null; then
+    vagrant halt
+    vagrant package
+    if [ ! -f package.box ]; then
+        warn "Vagrant couldn't package the running box"
+    fi
+    vagrant destroy -f
+else
+    vagrant plugin list
+    error "Vagrant couldn't run the box"
 fi
-vagrant destroy -f || :
 popd
