@@ -97,6 +97,8 @@ else
     error "VirtualBox/Libvirt command line wasn't installed"
 fi
 export VAGRANT_DEFAULT_PROVIDER
+info "Get vagrant plugin list"
+vagrant plugin list
 
 info "Validating Vagrant operation"
 pushd "$(mktemp -d)"
@@ -123,7 +125,6 @@ if vagrant up >/dev/null; then
     fi
     vagrant destroy -f
 else
-    vagrant plugin list
     error "Vagrant couldn't run the box"
 fi
 popd
