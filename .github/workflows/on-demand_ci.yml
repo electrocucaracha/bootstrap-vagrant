@@ -70,7 +70,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu_focal, ubuntu_jammy, rocky_9, opensuse_tumbleweed]
+        os: [ubuntu_focal, ubuntu_jammy, rocky_9]
         provider: [virtualbox, libvirt]
         include:
           - os: opensuse_leap

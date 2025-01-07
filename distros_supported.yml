@@ -1,7 +1,7 @@
 ---
 # SPDX-license-identifier: Apache-2.0
 ##############################################################################
-# Copyright (c) 2019 - 2024
+# Copyright (c) 2019 - 2025
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Apache License, Version 2.0
 # which accompanies this distribution, and is available at
@@ -9,17 +9,14 @@
 ##############################################################################
 linux:
   - alias: rocky_9
-    name: community/rockylinux-9
-    version: "1.0.0"
+    name: generic/rocky9
+    version: "4.3.12"
   - alias: ubuntu_focal
     name: generic/ubuntu2004
     version: "4.3.12"
   - alias: ubuntu_jammy
     name: generic/ubuntu2204
     version: "4.3.12"
-  - alias: opensuse_tumbleweed
-    name: opensuse/Tumbleweed.x86_64
-    version: "1.0.20240313"
   - alias: opensuse_leap
-    name: opensuse/Leap-15.2.x86_64
-    version: "15.2.31.632"
+    name: opensuse/Leap-15.6.x86_64
+    version: "15.6.13.356"
