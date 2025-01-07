@@ -16,6 +16,9 @@ on:
 permissions: read-all
 jobs:
   check-versions:
+    permissions:
+      contents: write # for technote-space/create-pr-action to push code
+      pull-requests: write # for technote-space/create-pr-action to create a PR
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
@@ -28,6 +31,9 @@ jobs:
           PR_BRANCH_NAME: "versions-update-${PR_ID}"
           PR_TITLE: "chore: update versions in setup.sh file"
   check-dictionary:
+    permissions:
+      contents: write # for technote-space/create-pr-action to push code
+      pull-requests: write # for technote-space/create-pr-action to create a PR
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
