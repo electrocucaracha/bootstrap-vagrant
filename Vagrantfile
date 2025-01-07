@@ -37,6 +37,7 @@ Vagrant.configure('2') do |config|
 
   # Configure DNS resolver
   config.vm.provision 'shell', privileged: false, inline: <<-SHELL
+    echo "Configure DNS resolver"
     if command -v systemd-resolve && sudo systemd-resolve --status --interface eth0; then
         sudo systemd-resolve --interface eth0 --set-dns 1.1.1.1 --flush-caches
         sudo systemd-resolve --status --interface eth0
@@ -49,6 +50,7 @@ Vagrant.configure('2') do |config|
 
   # Install requirements
   config.vm.provision 'shell', privileged: false, inline: <<-SHELL
+    echo "Install requirements"
     if ! command -v curl; then
         source /etc/os-release || source /usr/lib/os-release
         case ${ID,,} in
@@ -61,6 +63,7 @@ Vagrant.configure('2') do |config|
   SHELL
   # Upgrade Kernel version
   config.vm.provision 'shell', privileged: false, inline: <<-SHELL
+    echo "Upgrade Kernel version"
     source /etc/os-release || source /usr/lib/os-release
     case ${ID,,} in
         rhel|centos|fedora)
@@ -84,14 +87,17 @@ Vagrant.configure('2') do |config|
       'CREATE_SRIOV_VFS': create_sriov_vfs.to_s
     }
     sh.inline = <<-SHELL
+      echo "Provision server"
       set -o errexit
+      mkdir /vagrant/output
       cd /vagrant/
-      PROVIDER=#{vagrant_provider} ./setup.sh | tee  ~/setup.log
+      PROVIDER=#{vagrant_provider} ./setup.sh | tee  /vagrant/output/setup.log
     SHELL
   end
   config.vm.provision :reload
   config.vm.provision 'shell', privileged: false do |sh|
     sh.inline = <<-SHELL
+      echo "Validate installation"
       set -o errexit
       cd /vagrant
       ./validate.sh

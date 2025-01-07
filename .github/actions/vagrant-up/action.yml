@@ -42,12 +42,15 @@ runs:
       if: failure()
       shell: bash
       run: |
+        VBoxBugReport --text --output output/vbox_bug_report.log
         VBoxManage list runningvms --long
     - name: Upload VM logs
       if: failure()
       uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # 4.5.0
       with:
         name: vm-logs-${{ inputs.os }}_${{ inputs.provider }}-${{ github.run_id }}
-        path: ~/.config/VirtualBox/VBoxSVC.log
-        compression-level: 0 # no compression
+        path: |
+          output/*.log
+          ~/.config/VirtualBox/VBoxSVC.log
+          ~/VirtualBox\ VMs/*/Logs/VBoxUI.log
         retention-days: 7
