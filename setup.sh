@@ -232,7 +232,7 @@ function _install_deps {
         INSTALLER_CMD="sudo -H -E apt-get -y -q=3 install"
         CONFIGURE_ARGS+=" with-libvirt-lib=/usr/lib"
         ;;
-    rhel | centos | fedora)
+    rhel | centos | fedora | rocky)
         PKG_MANAGER=$(command -v dnf || command -v yum)
         INSTALLER_CMD="sudo -H -E ${PKG_MANAGER} -q -y install"
         if ! sudo "$PKG_MANAGER" repolist | grep "epel/"; then
