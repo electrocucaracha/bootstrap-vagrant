@@ -6,4 +6,3 @@ OVMF.fd
 *.dic
 node_modules/
 package*.json
-output/

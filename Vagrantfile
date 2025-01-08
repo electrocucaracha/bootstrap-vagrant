@@ -27,6 +27,7 @@ Vagrant.configure('2') do |config|
   config.vm.provider :virtualbox
 
   config.vm.synced_folder './', '/vagrant'
+  config.vm.synced_folder './output', '/vagrant/output'
   distros['linux'].each do |distro|
     config.vm.define "#{distro['alias']}_#{vagrant_provider}" do |node|
       node.vm.box = distro['name']
@@ -100,7 +101,6 @@ Vagrant.configure('2') do |config|
     sh.inline = <<-SHELL
       echo "Provision server"
       set -o errexit
-      mkdir /vagrant/output
       cd /vagrant/
       PROVIDER=#{vagrant_provider} ./setup.sh | tee  /vagrant/output/setup.log
     SHELL
@@ -149,6 +149,7 @@ Vagrant.configure('2') do |config|
 
   config.vm.provider :libvirt do |v, override|
     override.vm.synced_folder './', '/vagrant', type: 'nfs', nfs_version: ENV.fetch('VAGRANT_NFS_VERSION', 3)
+    override.vm.synced_folder './output', '/vagrant/output', type: 'nfs', nfs_version: ENV.fetch('VAGRANT_NFS_VERSION', 3)
     v.cpu_mode = 'host-passthrough'
     v.nested = true
     v.random_hostname = true
