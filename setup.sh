@@ -255,7 +255,7 @@ function _install_deps {
         pkgs+=" bridge-utils dnsmasq ebtables libvirt"
         pkgs+=" qemu-kvm ruby-devel gcc nfs make libguestfs"
         pkgs+=" pkgconf"
-        if [[ ${ID,,} != *"centos"* ]] && [[ ${VERSION_ID} != *8* ]]; then
+        if ! [[ "centos rocky" =~ (^|[[:space:]])${ID,,}($|[[:space:]]) ]]; then
             pkgs+=" qemu-utils"
         fi
         # Make kernel image world-readable required for supermin
