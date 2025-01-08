@@ -17,7 +17,7 @@ end
 vagrant_provider = ENV['PROVIDER'] || 'libvirt'
 create_sriov_vfs = ENV['CREATE_SRIOV_VFS']
 
-require "yaml"
+require 'yaml'
 distros = YAML.load_file("#{File.dirname(__FILE__)}/distros_supported.yml")
 
 # rubocop:disable Metrics/BlockLength
@@ -48,6 +48,17 @@ Vagrant.configure('2') do |config|
     fi
   SHELL
 
+  # Remove unused kernels
+  config.vm.provision 'shell', privileged: false, inline: <<-SHELL
+    echo "Remove unused kernels"
+    source /etc/os-release || source /usr/lib/os-release
+    case ${ID,,} in
+        ubuntu|debian)
+            sudo apt-get purge -y $(dpkg -l linux-{image,headers}-"[0-9]*" | awk '/ii/{print $2}' | grep -ve "$(uname -r | sed -r 's/-[a-z]+//')")
+            sudo apt autoremove -y
+        ;;
+    esac
+  SHELL
   # Install requirements
   config.vm.provision 'shell', privileged: false, inline: <<-SHELL
     echo "Install requirements"
