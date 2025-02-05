@@ -21,7 +21,7 @@ pre
 proxyconf
 repo
 rubocop
-scc
+Scc
 sloc
 src
 SRIOV

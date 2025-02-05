@@ -13,7 +13,7 @@ set -o errexit
 set -o pipefail
 
 msg="Summary \n"
-export PKG_VAGRANT_VERSION=${PKG_VAGRANT_VERSION:-2.4.1}
+export PKG_VAGRANT_VERSION=${PKG_VAGRANT_VERSION:-2.4.3}
 export PKG_VIRTUALBOX_VERSION=6.1
 if [ "${DEBUG:-false}" == "true" ]; then
     set -o xtrace
