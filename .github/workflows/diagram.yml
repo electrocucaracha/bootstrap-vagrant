@@ -25,7 +25,7 @@ jobs:
       pull-requests: write  # for technote-space/create-pr-action to create a PR
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # refs/tags/v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # refs/tags/v4.2.2
       - name: Update diagram
         uses: githubocto/repo-visualizer@a999615bdab757559bf94bda1fe6eef232765f85 # refs/tags/0.9.1
         with:
