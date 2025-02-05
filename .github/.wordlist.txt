@@ -1,6 +1,5 @@
 boyter
 brightgreen
-CentOS
 COCOMO
 codebase
 contrib
@@ -20,8 +19,6 @@ opensource
 openSUSE
 pre
 proxyconf
-QAT
-QuickAssit
 repo
 rubocop
 Scc

@@ -7,28 +7,24 @@
 # which accompanies this distribution, and is available at
 # http://www.apache.org/licenses/LICENSE-2.0
 ##############################################################################
-
 name: Vagrant up
+description: Creates a Vagrant Virtual Machine
 inputs:
   memory:
-    description: 'Memory'
+    description: "Memory"
     default: 12288
   cpu:
-    description: 'CPU'
+    description: "CPU"
     default: 3
   provider:
-    description: 'Vagrant provider'
+    description: "Vagrant provider"
     default: libvirt
   os:
-    description: 'Linux distribution'
+    description: "Linux distribution"
     default: ubuntu_focal
   enable_sriov_vfs:
-    description: 'Enable SR-IOV Virtual Functions'
+    description: "Enable SR-IOV Virtual Functions"
     default: false
-  enable_qat_vfs:
-    description: 'Enable QuickAssist Virtual Functions'
-    default: false
-
 runs:
   using: "composite"
   steps:
@@ -41,5 +37,20 @@ runs:
         PROVIDER: ${{ inputs.provider }}
         VAGRANT_NAME: ${{ inputs.os }}_${{ inputs.provider }}
         CREATE_SRIOV_VFS: ${{ inputs.enable_sriov_vfs }}
-        CREATE_QAT_VFS: ${{ inputs.enable_qat_vfs }}
       run: vagrant up "$VAGRANT_NAME"
+    - name: Check HW resources
+      if: failure()
+      shell: bash
+      run: |
+        VBoxBugReport --text --output output/vbox_bug_report.log
+        VBoxManage list runningvms --long
+    - name: Upload VM logs
+      if: failure()
+      uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # 4.5.0
+      with:
+        name: vm-logs-${{ inputs.os }}_${{ inputs.provider }}-${{ github.run_id }}
+        path: |
+          output/*.log
+          ~/.config/VirtualBox/VBoxSVC.log
+          ~/VirtualBox\ VMs/*/Logs/VBoxUI.log
+        retention-days: 7

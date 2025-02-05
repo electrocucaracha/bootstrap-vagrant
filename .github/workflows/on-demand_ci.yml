@@ -7,33 +7,28 @@
 # which accompanies this distribution, and is available at
 # http://www.apache.org/licenses/LICENSE-2.0
 ##############################################################################
-
 name: Check All
 # yamllint disable-line rule:truthy
 on:
   push:
     paths:
       - distros_supported.yml
-      - '**.sh'
+      - "**.sh"
   pull_request_review:
     types:
       - submitted
   workflow_dispatch:
-
+permissions: read-all
 jobs:
   changes:
     runs-on: ubuntu-latest
     if: >-
-      (
-        github.event_name == 'pull_request_review' &&
-        github.event.review.state == 'approved'
-      ) ||
-      github.event_name != 'pull_request_review'
+      ( github.event_name == 'pull_request_review' && github.event.review.state == 'approved' ) || github.event_name != 'pull_request_review'
     outputs:
       scripts: ${{ steps.filter.outputs.scripts }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # refs/tags/v4.2.2
-      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # refs/tags/v3.0.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # 3.0.2
         if: ${{ !env.ACT }}
         id: filter
         with:
@@ -47,9 +42,9 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # refs/tags/v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
       - name: Run the sh-checker
-        uses: luizm/action-sh-checker@17bd25a6ee188d2b91f677060038f4ba37ba14b2 # refs/tags/v0.9.0
+        uses: luizm/action-sh-checker@17bd25a6ee188d2b91f677060038f4ba37ba14b2 # 0.9.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHFMT_OPTS: -i 4 -s
@@ -61,7 +56,7 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # refs/tags/v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
       - name: Install ShellSpec
         run: curl -fsSL https://github.com/shellspec/shellspec/releases/latest/download/shellspec-dist.tar.gz | tar -xz -C ..
       - name: Run Shellspec
@@ -69,43 +64,24 @@ jobs:
         run: ../shellspec/shellspec --profile --xtrace
   check-setup:
     name: Check setup script on different distros using libvirt and/or virtualbox providers
-    runs-on: macos-12
+    runs-on: vm-self-hosted
     if: >-
-      (
-        github.event_name == 'pull_request_review' &&
-        github.event.review.state == 'approved'
-      ) ||
-      github.event_name != 'pull_request_review'
+      ( github.event_name == 'pull_request_review' && github.event.review.state == 'approved' ) || github.event_name != 'pull_request_review'
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu_focal, ubuntu_bionic, ubuntu_jammy, rocky_8, centos_7, opensuse_tumbleweed]
-        provider: [all]
+        os: [ubuntu_focal, ubuntu_jammy, rocky_9]
+        provider: [virtualbox, libvirt]
         include:
           - os: opensuse_leap
             provider: virtualbox
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # refs/tags/v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
       - uses: ./.github/actions/vagrant-setup
         with:
           distro: ${{ matrix.os }}
-      - name: Check Libvirt Provider
-        if: matrix.provider == 'libvirt' || matrix.provider == 'all'
+      - name: Vagrant up validation
         uses: ./.github/actions/vagrant-up
         with:
-          provider: libvirt
-          os: ${{ matrix.os }}
-      - name: Clenup instance
-        if: matrix.provider == 'libvirt' || matrix.provider == 'all'
-        env:
-          PROVIDER: libvirt
-          VAGRANT_NAME: ${{ matrix.os }}_libvirt
-        run: |
-          vagrant halt "$VAGRANT_NAME"
-          vagrant destroy -f "$VAGRANT_NAME"
-      - name: Check VirtualBox Provider
-        if: matrix.provider == 'virtualbox' || matrix.provider == 'all'
-        uses: ./.github/actions/vagrant-up
-        with:
-          provider: virtualbox
+          provider: ${{ matrix.provider }}
           os: ${{ matrix.os }}

@@ -7,37 +7,31 @@
 # which accompanies this distribution, and is available at
 # http://www.apache.org/licenses/LICENSE-2.0
 ##############################################################################
-
 name: Scheduled VFS install verification
 # yamllint disable-line rule:truthy
 on:
   schedule:
-    - cron: '0 0 * * 5'
+    - cron: "0 0 * * 5"
   workflow_dispatch:
-
+permissions: read-all
 jobs:
-  check-ubuntu-bionic-baremetal:
-    runs-on: ubuntu-18.04
+  check-ubuntu-jammy-baremetal:
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # refs/tags/v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
       - name: Setup services
         env:
           PROVIDER: libvirt
           CREATE_SRIOV_VFS: true
-          CREATE_QAT_VFS: true
         run: ./setup.sh
   check-vagrant:
-    runs-on: macos-12
+    runs-on: vm-self-hosted
     strategy:
       fail-fast: false
       matrix:
-        os: [centos_7, ubuntu_bionic, ubuntu_focal]
-        qat: [true]
-        include:
-          - os: centos_8
-            qat: false
+        os: [ubuntu_focal, ubuntu_jammy, rocky_9]
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # refs/tags/v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
       - uses: ./.github/actions/vagrant-setup
         with:
           distro: ${{ matrix.os }}
@@ -46,4 +40,3 @@ jobs:
           provider: libvirt
           os: ${{ matrix.os }}
           enable_sriov_vfs: true
-          enable_qat_vfs: ${{ matrix.qat }}

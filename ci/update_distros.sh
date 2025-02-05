@@ -58,11 +58,13 @@ function _vagrant_pull {
         msg+="$name($version, $PROVIDER) box doesn't exist\n"
         return
     fi
+    # editorconfig-checker-disable
     cat <<EOT >>.distros_supported.yml
   - alias: $alias
     name: $name
     version: "$version"
 EOT
+    # editorconfig-checker-enable
 }
 
 if ! command -v vagrant >/dev/null; then
@@ -84,13 +86,10 @@ cat <<EOT >.distros_supported.yml
 linux:
 EOT
 
-_vagrant_pull "centos_7" "centos/7"
-_vagrant_pull "rocky_8" "rockylinux/8"
-_vagrant_pull "ubuntu_bionic" "generic/ubuntu1804"
+_vagrant_pull "rocky_9" "generic/rocky9"
 _vagrant_pull "ubuntu_focal" "generic/ubuntu2004"
 _vagrant_pull "ubuntu_jammy" "generic/ubuntu2204"
-_vagrant_pull "opensuse_tumbleweed" "opensuse/Tumbleweed.x86_64"
-_vagrant_pull "opensuse_leap" "opensuse/Leap-15.2.x86_64"
+_vagrant_pull "opensuse_leap" "opensuse/Leap-15.6.x86_64"
 
 if [ "$msg" ]; then
     echo -e "$msg"

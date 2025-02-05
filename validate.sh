@@ -14,10 +14,12 @@ set -o errexit
 
 function info {
     _print_msg "INFO" "$1"
+    echo "::notice::$1"
 }
 
 function warn {
     _print_msg "WARN" "$1"
+    echo "::warning::$1"
 }
 
 function error {
@@ -26,15 +28,30 @@ function error {
 }
 
 function _print_msg {
-    msg+="$(date +%H:%M:%S) - $1: $2\n"
+    echo "$(date +%H:%M:%S) - $1: $2"
 }
 
-function print_summary {
-    echo -e "$msg"
+function _exit_trap {
+    if [ -f /proc/stat ]; then
+        printf "CPU usage: "
+        grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage " %"}'
+    fi
+    if [ -f /proc/pressure/io ]; then
+        printf "I/O Pressure Stall Information (PSI): "
+        grep full /proc/pressure/io | awk '{ sub(/avg300=/, ""); print $4 }'
+    fi
+    printf "Memory free(Kb):"
+    if [ -f /proc/zoneinfo ]; then
+        awk -v low="$(grep low /proc/zoneinfo | awk '{k+=$2}END{print k}')" '{a[$1]=$2}  END{ print a["MemFree:"]+a["Active(file):"]+a["Inactive(file):"]+a["SReclaimable:"]-(12*low);}' /proc/meminfo
+    fi
+    if command -v vm_stat; then
+        vm_stat | awk '/Pages free/ {print $3 * 4 }'
+    fi
+    ! command -v VBoxManage >/dev/null || VBoxManage list runningvms --long
+    ! command -v virsh >/dev/null || virsh list
 }
 
-msg="Summary:\n\n"
-trap print_summary ERR
+trap _exit_trap ERR
 
 if ! command -v vagrant >/dev/null; then
     error "Vagrant command line wasn't installed"
@@ -80,20 +97,12 @@ else
     error "VirtualBox/Libvirt command line wasn't installed"
 fi
 export VAGRANT_DEFAULT_PROVIDER
-
-if [ -f /etc/init.d/qat_service ]; then
-    info "Validating Intel QuickAssist drivers installation"
-    if ! sudo /etc/init.d/qat_service status | grep "There is .* QAT acceleration device(s) in the system:" >/dev/null; then
-        error "QAT drivers and/or service weren't installed properly"
-    else
-        if [[ -z "$(for i in 0442 0443 37c9 19e3; do lspci -d 8086:$i; done)" ]]; then
-            warn "There are no Virtual Functions enabled for any QAT device"
-        fi
-    fi
-fi
+info "Get vagrant plugin list"
+vagrant plugin list
 
 info "Validating Vagrant operation"
 pushd "$(mktemp -d)"
+# editorconfig-checker-disable
 cat <<EOT >vagrant_file.erb
 Vagrant.configure("2") do |config|
   config.vm.box = "<%= box_name %>"
@@ -106,15 +115,16 @@ Vagrant.configure("2") do |config|
   end
 end
 EOT
+# editorconfig-checker-enable
 vagrant init generic/alpine316 --box-version 3.5.0 --template vagrant_file.erb
-vagrant up || :
-vagrant halt
-vagrant package
-if [ ! -f package.box ]; then
-    warn "Vagrant couldn't package the running box"
+if vagrant up >/dev/null; then
+    vagrant halt
+    vagrant package
+    if [ ! -f package.box ]; then
+        warn "Vagrant couldn't package the running box"
+    fi
+    vagrant destroy -f
+else
+    error "Vagrant couldn't run the box"
 fi
-vagrant destroy -f || :
 popd
-
-trap ERR
-print_summary

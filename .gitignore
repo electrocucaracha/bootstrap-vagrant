@@ -4,3 +4,5 @@
 OVMF.fd
 *swp
 *.dic
+node_modules/
+package*.json

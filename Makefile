@@ -1,6 +1,6 @@
 # SPDX-license-identifier: Apache-2.0
 ##############################################################################
-# Copyright (c) 2021
+# Copyright (c) 2021,2024
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Apache License, Version 2.0
 # which accompanies this distribution, and is available at
@@ -14,10 +14,16 @@ lint:
 	sudo -E $(DOCKER_CMD) run --rm -v $$(pwd):/tmp/lint \
 	-e RUN_LOCAL=true \
 	-e LINTER_RULES_PATH=/ \
-	github/super-linter
+	-e VALIDATE_SHELL_SHFMT=false \
+	-e EDITORCONFIG_FILE_NAME=.editorconfig \
+	ghcr.io/super-linter/super-linter
 	tox -e lint
 
 .PHONY: fmt
 fmt:
-	sudo -E $(DOCKER_CMD) run --rm -u "$$(id -u):$$(id -g)" \
-	 -v "$$(pwd):/mnt" -w /mnt mvdan/shfmt -l -w -i 4 -s .
+	command -v shfmt > /dev/null || curl -s "https://i.jpillora.com/mvdan/sh!!?as=shfmt" | bash
+	shfmt -l -w -s .
+	command -v yamlfmt > /dev/null || curl -s "https://i.jpillora.com/google/yamlfmt!!" | bash
+	yamlfmt -dstar **/*.{yaml,yml}
+	command -v prettier > /dev/null || npm install prettier
+	npx prettier . --write
