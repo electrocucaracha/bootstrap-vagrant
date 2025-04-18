@@ -46,7 +46,7 @@ runs:
         VBoxManage list runningvms --long
     - name: Upload VM logs
       if: failure()
-      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # 4.6.1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # 4.6.2
       with:
         name: vm-logs-${{ inputs.os }}_${{ inputs.provider }}-${{ github.run_id }}
         path: |
