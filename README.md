@@ -12,26 +12,26 @@
 [![Scc Code Badge](https://sloc.xyz/github/electrocucaracha/bootstrap-vagrant?category=code)](https://github.com/boyter/scc/)
 [![Scc COCOMO Badge](https://sloc.xyz/github/electrocucaracha/bootstrap-vagrant?category=cocomo)](https://github.com/boyter/scc/)
 
-This project was created to ensure that [setup.sh](setup.sh) bash script is able
-to install [Vagrant tool][1] in different Linux Distributions. It covers the
-installation of its dependencies, plugins and providers.
+Bootstrap Vagrant is a [portable bash script](setup.sh) designed to automate the installation of [Vagrant][1]
+and its dependencies across various Linux distributions. It also supports the setup of common Vagrant providers
+and plugins, enabling consistent development environments with minimal effort.
 
-## Linux Distros supported
+## Supported Linux Distributions
 
-| Name     |   Version   |
-| :------- | :---------: |
-| Ubuntu   | 20.04/22.04 |
-| Rocky    |      9      |
-| openSUSE |    Leap     |
+| Distribution |  Versions   |
+| :----------- | :---------: |
+| Ubuntu       | 20.04/22.04 |
+| Rocky        |      9      |
+| openSUSE     |    Leap     |
 
-## Vagrant Providers supported
+## Supported Vagrant Providers
 
-| Name       | Version |
+| Provider   | Version |
 | :--------- | :-----: |
 | VirtualBox |   6.1   |
 | Libvirt    |         |
 
-## Vagrant Plugins installed
+## Installed Vagrant Plugins
 
 - vagrant-proxyconf
 - vagrant-libvirt
@@ -39,26 +39,26 @@ installation of its dependencies, plugins and providers.
 - vagrant-packet
 - vagrant-google
 
-## How use this script?
+## Usage
 
-The [setup.sh](setup.sh) bash script has been designed to be consumed remotely
-and executed multiple times.
+The script is designed to be idempotent and remotely executable.
 
     curl -fsSL http://bit.ly/initVagrant | PROVIDER=libvirt bash
 
+You can run it multiple times without harmful side effects.
+
 ### Environment variables
 
-| Name             | Default | Description                                    |
-| :--------------- | :-----: | :--------------------------------------------- |
-| PROVIDER         |         | Specifies the Vagrant Provider to be installed |
-| CREATE_SRIOV_VFS |  false  | Creates SR-IOV Virtual Functions               |
+| Variable         | Default | Description                                 |
+| :--------------- | :-----: | :------------------------------------------ |
+| PROVIDER         |         | Specifies which Vagrant provider to install |
+| CREATE_SRIOV_VFS |  false  | Optionally creates SR-IOV Virtual Functions |
 
 ## Contribution
 
-This is an open project, several individuals contribute in different forms like
-coding, documenting, testing, spreading the word at events within others.
+This is an open-source project that welcomes contributions of all kinds: code, documentation, testing, and advocacy.
 
-Thanks to all the people who already contributed!
+Thanks to all the people who have contributed so far!
 
 <a href="https://github.com/electrocucaracha/bootstrap-vagrant/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=electrocucaracha/bootstrap-vagrant" alt="Contributors" />
