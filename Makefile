@@ -15,7 +15,7 @@ lint:
 	-e RUN_LOCAL=true \
 	-e LINTER_RULES_PATH=/ \
 	-e VALIDATE_SHELL_SHFMT=false \
-	-e EDITORCONFIG_FILE_NAME=.editorconfig \
+	-e EDITORCONFIG_FILE_NAME=.editorconfig-checker.json \
 	ghcr.io/super-linter/super-linter
 	tox -e lint
 

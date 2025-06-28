@@ -12,6 +12,7 @@ name: Lint Code Base
 on:
   push:
   pull_request:
+permissions: read-all
 jobs:
   get-sloc:
     name: Count Lines of Code
@@ -44,7 +45,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: /
           VALIDATE_SHELL_SHFMT: false
-          EDITORCONFIG_FILE_NAME: .editorconfig
+          EDITORCONFIG_FILE_NAME: .editorconfig-checker.json
   check-tox:
     name: Check syntax (tox)
     runs-on: ubuntu-latest
