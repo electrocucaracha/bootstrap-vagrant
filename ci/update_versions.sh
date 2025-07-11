@@ -11,7 +11,7 @@
 set -o errexit
 set -o pipefail
 if [[ ${DEBUG:-false} == "true" ]]; then
-    set -o xtrace
+	set -o xtrace
 fi
 
 eval "$(curl -fsSL https://raw.githubusercontent.com/electrocucaracha/pkg-mgr_scripts/master/ci/pinned_versions.env)"
@@ -22,8 +22,8 @@ sed -i "s/vagrant version.*/vagrant version | awk 'NR==1\{print \$3}')\" != \"$P
 # Update GitHub Action commit hashes
 gh_actions=$(grep -r "uses: [a-zA-Z\-]*/[\_a-z\-]*@" .github/ | sed 's/@.*//' | awk -F ': ' '{ print $3 }' | sort -u)
 for action in $gh_actions; do
-    commit_hash=$(git ls-remote "https://github.com/$action" | grep 'refs/tags/[v]\?[0-9][0-9\.]*$' | sed 's|refs/tags/[vV]\?[\.]\?||g' | sort -u -k2 -V | tail -1 | awk '{ printf "%s # %s\n",$1,$2 }')
-    # shellcheck disable=SC2267
-    grep -ElRZ "uses: $action@" .github/ | xargs -0 -l sed -i -e "s|uses: $action@.*|uses: $action@$commit_hash|g"
+	commit_hash=$(git ls-remote "https://github.com/$action" | grep 'refs/tags/[v]\?[0-9][0-9\.]*$' | sed 's|refs/tags/[vV]\?[\.]\?||g' | sort -u -k2 -V | tail -1 | awk '{ printf "%s # %s\n",$1,$2 }')
+	# shellcheck disable=SC2267
+	grep -ElRZ "uses: $action@" .github/ | xargs -0 -l sed -i -e "s|uses: $action@.*|uses: $action@$commit_hash|g"
 done
 make fmt
