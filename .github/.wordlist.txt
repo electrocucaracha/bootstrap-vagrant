@@ -3,7 +3,6 @@ brightgreen
 COCOMO
 codebase
 contrib
-Distros
 electrocucaracha
 fsSL
 href
