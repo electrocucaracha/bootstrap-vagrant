@@ -46,6 +46,7 @@ jobs:
           LINTER_RULES_PATH: /
           VALIDATE_SHELL_SHFMT: false
           EDITORCONFIG_FILE_NAME: .editorconfig-checker.json
+          DEFAULT_BRANCH: ${{ github.head_ref || github.ref_name }}
   check-tox:
     name: Check syntax (tox)
     runs-on: ubuntu-latest
