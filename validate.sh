@@ -117,7 +117,7 @@ end
 EOT
 # editorconfig-checker-enable
 vagrant init generic/alpine316 --box-version 3.5.0 --template vagrant_file.erb
-if vagrant up >/dev/null; then
+if timeout 1m vagrant up >/dev/null; then
     vagrant halt
     vagrant package
     if [ ! -f package.box ]; then
