@@ -252,12 +252,20 @@ function _install_deps {
         ;;
     libvirt)
         $INSTALLER_CMD qemu || :
-        pkgs+=" bridge-utils dnsmasq ebtables libvirt"
-        pkgs+=" qemu-kvm ruby-devel gcc nfs make libguestfs"
-        pkgs+=" pkgconf"
-        if ! [[ "centos rocky" =~ (^|[[:space:]])${ID,,}($|[[:space:]]) ]]; then
-            pkgs+=" qemu-utils"
+        pkgs=" libvirt qemu-kvm dnsmasq vagrant make"
+        if [[ ${ID,,} == "ubuntu" ]] && _vercmp "$VERSION_ID" '>=' "22.04"; then
+            pkgs+=" guestfs-tools"
         fi
+        if [[ "suse" =~ (^|[[:space:]])${ID,,}($|[[:space:]]) ]]; then
+            pkgs+=" polkit"
+        fi
+        if ! [[ "centos rocky" =~ (^|[[:space:]])${ID,,}($|[[:space:]]) ]]; then
+            pkgs+=" notification-daemon vagrant-libvirt qemu-utils"
+        else
+            sudo dnf config-manager --set-enabled crb
+            sudo dnf install -y '@Virtualization Hypervisor' '@Virtualization Tools' '@Development Tools' 'libvirt-devel'
+        fi
+
         # Make kernel image world-readable required for supermin
         if command -v dpkg-statoverride; then
             sudo dpkg-statoverride --update --add root root 0644 "/boot/vmlinuz-$(uname -r)" || :
