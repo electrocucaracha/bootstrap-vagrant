@@ -37,7 +37,6 @@ and plugins, enabling consistent development environments with minimal effort.
 - vagrant-libvirt
 - vagrant-reload
 - vagrant-packet
-- vagrant-google
 
 ## Usage
 
