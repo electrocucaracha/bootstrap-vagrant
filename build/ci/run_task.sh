@@ -14,11 +14,11 @@ set -o nounset
 set -o xtrace
 
 if ! command -v fly; then
-    # NOTE: Shorten link -> https://github.com/electrocucaracha/pkg-mgr_scripts
-    curl -fsSL http://bit.ly/install_pkg | PKG=fly bash
+	# NOTE: Shorten link -> https://github.com/electrocucaracha/pkg-mgr_scripts
+	curl -fsSL http://bit.ly/install_pkg | PKG=fly bash
 fi
 
 fly execute --privileged \
-    --target="${RELENG_TARGET:-releng}" \
-    --config="${TASK_NAME}-task.yml" \
-    -i src=../../ "$@"
+	--target="${RELENG_TARGET:-releng}" \
+	--config="${TASK_NAME}-task.yml" \
+	-i src=../../ "$@"
