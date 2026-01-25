@@ -51,6 +51,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: /
           VALIDATE_SHELL_SHFMT: false
+          VALIDATE_BIOME_FORMAT: false
           EDITORCONFIG_FILE_NAME: .editorconfig-checker.json
           DEFAULT_BRANCH: ${{ github.head_ref || github.ref_name }}
   check-tox:
