@@ -17,6 +17,8 @@ permissions: read-all
 jobs:
   check-ubuntu-jammy-baremetal:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # 6.0.2
         with:
@@ -28,6 +30,8 @@ jobs:
         run: ./setup.sh
   check-vagrant:
     runs-on: vm-self-hosted
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:

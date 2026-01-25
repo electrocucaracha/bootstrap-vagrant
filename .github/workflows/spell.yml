@@ -22,6 +22,8 @@ jobs:
   check-reviewdog:
     name: Check spelling (reviewdog)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # 6.0.2
         with:
@@ -32,6 +34,8 @@ jobs:
   check-spellcheck:
     name: Check spelling (pyspelling)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # 6.0.2
         with:
