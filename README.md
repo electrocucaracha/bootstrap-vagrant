@@ -12,7 +12,7 @@
 [![Scc Code Badge](https://sloc.xyz/github/electrocucaracha/bootstrap-vagrant?category=code)](https://github.com/boyter/scc/)
 [![Scc COCOMO Badge](https://sloc.xyz/github/electrocucaracha/bootstrap-vagrant?category=cocomo)](https://github.com/boyter/scc/)
 
-Bootstrap Vagrant is a [portable bash script](setup.sh) designed to automate the installation of [Vagrant][1]
+Bootstrap Vagrant is a [portable Bash script](setup.sh) designed to automate the installation of [Vagrant][1]
 and its dependencies across various Linux distributions. It also supports the setup of common Vagrant providers
 and plugins, enabling consistent development environments with minimal effort.
 
