@@ -87,7 +87,6 @@ linux:
 EOT
 
 _vagrant_pull "rocky_9" "generic/rocky9"
-_vagrant_pull "ubuntu_focal" "generic/ubuntu2004"
 _vagrant_pull "ubuntu_jammy" "generic/ubuntu2204"
 _vagrant_pull "opensuse_leap" "opensuse/Leap-15.6.x86_64"
 

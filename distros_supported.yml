@@ -11,9 +11,6 @@ linux:
   - alias: rocky_9
     name: generic/rocky9
     version: "4.3.12"
-  - alias: ubuntu_focal
-    name: generic/ubuntu2004
-    version: "4.3.12"
   - alias: ubuntu_jammy
     name: generic/ubuntu2204
     version: "4.3.12"

@@ -18,11 +18,11 @@ and plugins, enabling consistent development environments with minimal effort.
 
 ## Supported Linux Distributions
 
-| Distribution |  Versions   |
-| :----------- | :---------: |
-| Ubuntu       | 20.04/22.04 |
-| Rocky        |      9      |
-| openSUSE     |    Leap     |
+| Distribution | Versions |
+| :----------- | :------: |
+| Ubuntu       |  22.04   |
+| Rocky        |    9     |
+| openSUSE     |   Leap   |
 
 ## Supported Vagrant Providers
 
