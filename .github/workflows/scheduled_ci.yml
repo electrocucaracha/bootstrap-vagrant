@@ -11,7 +11,7 @@ name: Scheduled VFS install verification
 # yamllint disable-line rule:truthy
 on:
   schedule:
-    - cron: "0 0 * * 5"
+    - cron: "0 0 * * 3"
   workflow_dispatch:
 permissions: read-all
 jobs:
