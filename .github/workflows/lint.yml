@@ -24,7 +24,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Setup Go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # 6.2.0
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # 6.4.0
         with:
           go-version: "^1.25"
           cache: false
@@ -57,7 +57,7 @@ jobs:
           persist-credentials: false
       - name: Run super-linter validation
         id: linter-validation
-        uses: super-linter/super-linter@12562e48d7059cf666c43a4ecb0d3b5a2b31bd9e # 8.4.0
+        uses: super-linter/super-linter@9e863354e3ff62e0727d37183162c4a88873df41 # 8.6.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: /
@@ -65,7 +65,7 @@ jobs:
           VALIDATE_BIOME_FORMAT: false
           EDITORCONFIG_FILE_NAME: .editorconfig-checker.json
           DEFAULT_BRANCH: ${{ github.head_ref || github.ref_name }}
-      - uses: GrantBirki/git-diff-action@7420e4d095c27bb23359787640976d60c94fd216 # 2.8.1
+      - uses: GrantBirki/git-diff-action@b27608d18e6dd9b31b46ede56a93e045d3881a28 # 3.0.0
         id: git-diff
         if: failure()
       - name: Get failed linter logs
@@ -73,7 +73,7 @@ jobs:
         if: failure()
         run: |
           find ./super-linter-output/super-linter/ -name '*.json' -exec sh -c 'jq -e ".Exitval != 0" "$1" >/dev/null && printf "%s\0" "$1"' _ {} \; | xargs -0 jq -s '.' > linter-errors.json
-      - uses: actions/ai-inference@a6101c89c6feaecc585efdd8d461f18bb7896f20 # 2.0.5
+      - uses: actions/ai-inference@af6ad2c4ac4edf01884054fc3a6caa6d2567c13a # 2.0.8
         id: ai-linter-analysis
         if: failure()
         with:
