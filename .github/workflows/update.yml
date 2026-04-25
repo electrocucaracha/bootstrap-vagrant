@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # 6.0.2
         env:
           # Fine-grained PAT with contents:write and workflows:write scopes
-          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }} # zizmor: ignore[secrets-outside-env]
         with:
           persist-credentials: true
           token: ${{ env.WORKFLOW_TOKEN }}
